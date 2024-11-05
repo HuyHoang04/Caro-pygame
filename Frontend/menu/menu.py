@@ -5,7 +5,7 @@ from graphics import draw_grid, draw_symbols
 
 pygame.init()
 
-SCREEN = pygame.display.set_mode((1280, 820))
+SCREEN = pygame.display.set_mode((1280, 850))
 pygame.display.set_caption("Menu")
 
 BG = pygame.image.load("assets/Background2.jpg")
@@ -20,8 +20,10 @@ board_sizes = ["3x3", "10x10", "15x15", "18x18"]
 current_size_index = 2  # Default to 15x15
 
 def play():
+    # Cập nhật kích thước bàn cờ và vị trí lưới sau khi thay đổi kích thước
     board_size = int(board_sizes[current_size_index].split('x')[0])
     set_board_size(board_size)
+    update_grid_offset()  # Cập nhật vị trí lưới để căn giữa màn hình
 
     board = [["" for _ in range(get_board_size())] for _ in range(get_board_size())]
 
@@ -29,12 +31,14 @@ def play():
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
 
         SCREEN.fill("black")
-
+        
+        # Vẽ lưới và ký hiệu với lưới đã được căn giữa
         draw_grid(SCREEN)
         draw_symbols(SCREEN, board)
 
-        PLAY_BACK = Button(image=None, pos=(660, 680), 
-                            text_input="BACK", font=get_font(75), base_color="Black", hovering_color="Red")
+        # ... (các phần khác không thay đổi)
+        PLAY_BACK = Button(image=None, pos=(660, 785), 
+                           text_input="BACK", font=get_font(45), base_color="Black", hovering_color="Red")
 
         PLAY_BACK.changeColor(PLAY_MOUSE_POS)
         PLAY_BACK.update(SCREEN)
@@ -61,25 +65,25 @@ def main_menu():
         MENU_RECT = MENU_TEXT.get_rect(center=(640, 120))
 
         PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 480), 
-                            text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-    
+                             text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+
         QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 650), 
-                            text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
 
         LEFT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(440, 250), 
-                            text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
         
         RIGHT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(840, 250), 
-                            text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
 
         LEVEL_TEXT = get_font(35).render(levels[current_level_index], True, "#d7fcd4")
         LEVEL_RECT = LEVEL_TEXT.get_rect(center=(640, 250))
 
         LEFT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(440, 350), 
-                            text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+                                 text_input="", font=get_font(75), base_color="White", hovering_color="Green")
         
         RIGHT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(840, 350), 
-                            text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
 
         SIZE_TEXT = get_font(35).render(board_sizes[current_size_index], True, "#d7fcd4")
         SIZE_RECT = SIZE_TEXT.get_rect(center=(640, 350))
@@ -109,12 +113,14 @@ def main_menu():
                 if LEFT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index - 1) % len(board_sizes)
                     set_board_size(int(board_sizes[current_size_index].split('x')[0]))  # Cập nhật kích thước bảng
+                    update_grid_offset()  # Cập nhật lại vị trí lưới sau khi thay đổi kích thước
 
                 if RIGHT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index + 1) % len(board_sizes)
                     set_board_size(int(board_sizes[current_size_index].split('x')[0]))  # Cập nhật kích thước bảng
-
+                    update_grid_offset()  # Cập nhật lại vị trí lưới sau khi thay đổi kích thước
 
         pygame.display.update()
+
 
 main_menu()

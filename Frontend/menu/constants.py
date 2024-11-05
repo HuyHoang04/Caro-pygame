@@ -1,3 +1,4 @@
+# constants.py
 import pygame
 
 # Khởi tạo pygame
@@ -7,8 +8,8 @@ pygame.init()
 N = 18  # Kích thước ma trận ban đầu
 WIN_CONDITION = 5  # Số ký tự liên tiếp để thắng
 CELL_SIZE = 35  # Kích thước mỗi ô vuông
-WIDTH = 1300
-HEIGHT = 650
+WIDTH = 1280  # Đảm bảo kích thước này trùng với SCREEN trong menu.py
+HEIGHT = 820  # Đảm bảo kích thước này trùng với SCREEN trong menu.py
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -27,9 +28,10 @@ def update_grid_offset():
 def set_board_size(size):
     global N
     N = size
-    update_grid_offset()
+    update_grid_offset()  # Cập nhật vị trí mỗi khi thay đổi kích thước bàn cờ
 
 def get_board_size():
     return N
 
+# Gọi cập nhật lần đầu tiên
 update_grid_offset()
