@@ -5,7 +5,7 @@ from graphics import draw_grid, draw_symbols
 
 pygame.init()
 
-SCREEN = pygame.display.set_mode((1280, 920))
+SCREEN = pygame.display.set_mode((1280, 820))
 pygame.display.set_caption("Menu")
 
 BG = pygame.image.load("assets/Background2.jpg")
@@ -21,11 +21,9 @@ current_size_index = 2  # Default to 15x15
 
 def play():
     board_size = int(board_sizes[current_size_index].split('x')[0])
-    global N
-    N = board_size
-    update_grid_offset()
+    set_board_size(board_size)
 
-    board = [["" for _ in range(N)] for _ in range(N)]
+    board = [["" for _ in range(get_board_size())] for _ in range(get_board_size())]
 
     while True:
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
@@ -35,7 +33,7 @@ def play():
         draw_grid(SCREEN)
         draw_symbols(SCREEN, board)
 
-        PLAY_BACK = Button(image=None, pos=(640, 660), 
+        PLAY_BACK = Button(image=None, pos=(660, 680), 
                             text_input="BACK", font=get_font(75), base_color="Black", hovering_color="Red")
 
         PLAY_BACK.changeColor(PLAY_MOUSE_POS)
@@ -110,8 +108,12 @@ def main_menu():
                     current_level_index = (current_level_index + 1) % len(levels)
                 if LEFT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index - 1) % len(board_sizes)
+                    set_board_size(int(board_sizes[current_size_index].split('x')[0]))  # Cập nhật kích thước bảng
+
                 if RIGHT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index + 1) % len(board_sizes)
+                    set_board_size(int(board_sizes[current_size_index].split('x')[0]))  # Cập nhật kích thước bảng
+
 
         pygame.display.update()
 

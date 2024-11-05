@@ -4,11 +4,11 @@ import pygame
 pygame.init()
 
 # Thiết lập kích thước bảng và các biến
-N = 10  # Kích thước ma trận (10x10)
+N = 18  # Kích thước ma trận ban đầu
 WIN_CONDITION = 5  # Số ký tự liên tiếp để thắng
 CELL_SIZE = 30  # Kích thước mỗi ô vuông
-WIDTH = 1100
-HEIGHT = 600
+WIDTH = 1300
+HEIGHT = 650
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -28,5 +28,8 @@ def set_board_size(size):
     global N
     N = size
     update_grid_offset()
+
+def get_board_size():
+    return N
 
 update_grid_offset()
