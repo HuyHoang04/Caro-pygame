@@ -35,3 +35,20 @@ def draw_symbols(screen, board):
                 pygame.draw.circle(screen, BLACK, (GRID_OFFSET_X + col * CELL_SIZE + CELL_SIZE // 2, 
                                                     GRID_OFFSET_Y + row * CELL_SIZE + CELL_SIZE // 2),
                                    CELL_SIZE // 2 - 10, LINE_WIDTH)
+
+def draw_winning_line(screen, positions):
+    if not positions:
+        return
+
+    # Lấy tọa độ của ô đầu và ô cuối trong chuỗi thắng
+    start_pos = positions[0]
+    end_pos = positions[-1]
+
+    # Tính tọa độ điểm đầu và điểm cuối cho đường thắng
+    start_x = GRID_OFFSET_X + start_pos[1] * CELL_SIZE + CELL_SIZE // 2
+    start_y = GRID_OFFSET_Y + start_pos[0] * CELL_SIZE + CELL_SIZE // 2
+    end_x = GRID_OFFSET_X + end_pos[1] * CELL_SIZE + CELL_SIZE // 2
+    end_y = GRID_OFFSET_Y + end_pos[0] * CELL_SIZE + CELL_SIZE // 2
+
+    # Vẽ đường thắng
+    pygame.draw.line(screen, RED, (start_x, start_y), (end_x, end_y), LINE_WIDTH * 2)
