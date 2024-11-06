@@ -1,5 +1,5 @@
 # constants.py
-import pygame
+import pygame, random
 
 # Khởi tạo pygame
 pygame.init()
@@ -9,7 +9,7 @@ N = 18  # Kích thước ma trận ban đầu
 WIN_CONDITION = 5  # Số ký tự liên tiếp để thắng
 CELL_SIZE = 35  # Kích thước mỗi ô vuông
 WIDTH = 1280  # Đảm bảo kích thước này trùng với SCREEN trong menu.py
-HEIGHT = 820  # Đảm bảo kích thước này trùng với SCREEN trong menu.py
+HEIGHT = 850  # Đảm bảo kích thước này trùng với SCREEN trong menu.py
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -32,6 +32,21 @@ def set_board_size(size):
 
 def get_board_size():
     return N
+
+
+def get_board_position(mouse_pos):
+    x, y = mouse_pos
+    if GRID_OFFSET_X <= x < GRID_OFFSET_X + get_board_size() * CELL_SIZE and GRID_OFFSET_Y <= y < GRID_OFFSET_Y + get_board_size() * CELL_SIZE:
+        row = (y - GRID_OFFSET_Y) // CELL_SIZE
+        col = (x - GRID_OFFSET_X) // CELL_SIZE
+        return row, col
+    return None, None
+
+def get_random_empty_cell(board):
+    empty_cells = [(r, c) for r in range(get_board_size()) for c in range(get_board_size()) if board[r][c] == ""]
+    if empty_cells:
+        return random.choice(empty_cells)
+    return None, None
 
 # Gọi cập nhật lần đầu tiên
 update_grid_offset()
