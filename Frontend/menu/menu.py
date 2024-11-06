@@ -5,6 +5,8 @@ from constants import *
 from graphics import draw_grid, draw_symbols, draw_winning_line
 from checkwin import check_winner
 from test import find_best_move
+from leaderboard import save_score, load_leaderboard
+
 
 # Khởi tạo pygame
 pygame.init()
@@ -116,20 +118,31 @@ def find_random_empty_spot(board):
 
         
 def display_winner_screen(winner):
+    # Hỏi tên người chơi
+    player_name = "Player"  # Ở đây có thể thêm input để người dùng nhập tên
+
+    # Lưu kết quả vào bảng xếp hạng
+    if winner == "X":
+        save_score(player_name, "Thắng")
+    else:
+        save_score(player_name, "Thua")
+
     while True:
         SCREEN.blit(BG, (0, 0))  # Màu nền cho thông báo người thắng
 
         WINNER_TEXT = get_font(75).render(f"{winner} Wins!", True, "White")
         WINNER_RECT = WINNER_TEXT.get_rect(center=(670, 300))
 
-        REPLAY_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(440, 500), 
+        REPLAY_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(440, 500),
                                text_input="Replay", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
-        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(840, 500), 
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(840, 500),
                              text_input="BACK", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        SCORE_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 630),
+                              text_input="Score", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
 
         SCREEN.blit(WINNER_TEXT, WINNER_RECT)
 
-        for button in [REPLAY_BUTTON, BACK_BUTTON]:
+        for button in [REPLAY_BUTTON, BACK_BUTTON, SCORE_BUTTON]:
             button.changeColor(pygame.mouse.get_pos())
             button.update(SCREEN)
 
@@ -142,8 +155,47 @@ def display_winner_screen(winner):
                     play()  # Bắt đầu lại trò chơi
                 if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
                     main_menu()  # Quay lại menu chính
+                if SCORE_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    display_leaderboard()  # Hiện bảng xếp hạng
 
-        pygame.display.update() 
+        pygame.display.update()
+
+# menu.py (Thêm hàm display_leaderboard)
+def display_leaderboard():
+    leaderboard = load_leaderboard()
+    
+    while True:
+        SCREEN.blit(BG, (0, 0))  # Đặt màu nền
+
+        # Hiển thị tiêu đề bảng xếp hạng
+        TITLE_TEXT = get_font(75).render("LEADERBOARD", True, "White")
+        TITLE_RECT = TITLE_TEXT.get_rect(center=(640, 100))
+        SCREEN.blit(TITLE_TEXT, TITLE_RECT)
+
+        # Hiển thị từng dòng trong bảng xếp hạng
+        y_offset = 200
+        for index, entry in enumerate(leaderboard[:20]):  # Hiển thị tối đa 10 mục
+            name_text = get_font(35).render(f"{index+1}. {entry[0]} - {entry[1]}", True, "White")
+            name_rect = name_text.get_rect(center=(640, y_offset))
+            SCREEN.blit(name_text, name_rect)
+            y_offset += 50  # Khoảng cách giữa các dòng
+
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 750),
+                             text_input="BACK", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+
+        BACK_BUTTON.changeColor(pygame.mouse.get_pos())
+        BACK_BUTTON.update(SCREEN)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    return  # Trở về màn hình trước
+
+        pygame.display.update()
+
 
 # Hàm menu chính
 # Hàm menu chính
