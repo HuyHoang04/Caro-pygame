@@ -66,7 +66,7 @@ def play():
                     if 0 <= row < board_size and 0 <= col < board_size and board[row][col] == "":
                         board[row][col] = "X"  # Đánh dấu của người chơi
                         if check_winner(board, "X"):
-                            print("Player wins!")
+                            display_winner_screen("X")
                             pygame.time.wait(2000)
                             main_menu()  # Quay lại menu chính nếu người chơi thắng
                         player_turn = False  # Chuyển sang lượt của máy
@@ -78,7 +78,7 @@ def play():
                     if board[row][col] == "":
                         board[row][col] = "O"  # Máy đánh dấu
                         if check_winner(board, "O"):
-                            print("AI wins!")
+                            display_winner_screen("O")
                             pygame.time.wait(2000)
                             main_menu()  # Quay lại menu chính nếu máy thắng
                         player_turn = True  # Chuyển lại lượt cho người chơi
@@ -87,6 +87,36 @@ def play():
                     break
 
         pygame.display.update()
+        
+def display_winner_screen(winner):
+    while True:
+        SCREEN.fill("white")  # Màu nền cho thông báo người thắng
+
+        WINNER_TEXT = get_font(75).render(f"{winner} Wins!", True, "Black")
+        WINNER_RECT = WINNER_TEXT.get_rect(center=(640, 300))
+
+        REPLAY_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(440, 500), 
+                               text_input="Replay", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(840, 500), 
+                             text_input="BACK", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+
+        SCREEN.blit(WINNER_TEXT, WINNER_RECT)
+
+        for button in [REPLAY_BUTTON, BACK_BUTTON]:
+            button.changeColor(pygame.mouse.get_pos())
+            button.update(SCREEN)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if REPLAY_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    play()  # Bắt đầu lại trò chơi
+                if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    main_menu()  # Quay lại menu chính
+
+        pygame.display.update() 
 
 # Hàm menu chính
 def main_menu():
