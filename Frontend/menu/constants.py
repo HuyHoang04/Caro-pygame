@@ -12,12 +12,20 @@ WIDTH = 1280  # Đảm bảo kích thước này trùng với SCREEN trong menu.
 HEIGHT = 850  # Đảm bảo kích thước này trùng với SCREEN trong menu.py
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-BLUE = (173, 216, 230)  # Màu nền lưới
-BACKGROUND_COLOR = (240, 248, 255)  # Màu nền màn hình
+RED = (255, 0, 0) # Màu nền lưới
+BACKGROUND_COLOR = pygame.image.load("assets/Background3.jpg")  # Màu nền màn hình
 LINE_WIDTH = 2
 FRAME_COLOR = (0, 128, 128)  # Màu khung bao quanh lưới
 FRAME_WIDTH = 6  # Độ dày của khung
+
+
+# Tải các biểu tượng X và O
+ICON_X = pygame.image.load("assets/iconX.png")  # Đường dẫn tới ảnh iconX.png
+ICON_O = pygame.image.load("assets/iconO.png")  # Đường dẫn tới ảnh iconO.png
+
+# Cân nhắc thay đổi kích thước icon để phù hợp với CELL_SIZE (nếu cần thiết)
+ICON_X = pygame.transform.scale(ICON_X, (CELL_SIZE - 10, CELL_SIZE - 10))
+ICON_O = pygame.transform.scale(ICON_O, (CELL_SIZE - 10, CELL_SIZE - 10))
 
 # Thiết lập vị trí lưới để nằm giữa màn hình
 def update_grid_offset():

@@ -14,7 +14,7 @@ SCREEN = pygame.display.set_mode((1280, 850))
 pygame.display.set_caption("Menu")
 
 # Tải ảnh nền
-BG = pygame.image.load("assets/Background2.jpg")
+BG = pygame.image.load("assets/Background3.jpg")
 player_name = ""
 
 # Hàm lấy font chữ
@@ -65,8 +65,8 @@ def play():
         draw_grid(SCREEN)
         draw_symbols(SCREEN, board)
 
-        PLAY_BACK = Button(image=None, pos=(660, 785), 
-                           text_input="BACK", font=get_font(45), base_color="Black", hovering_color="Red")
+        PLAY_BACK = Button(image=None, pos=(660, 795), 
+                           text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
 
         PLAY_BACK.changeColor(PLAY_MOUSE_POS)
         PLAY_BACK.update(SCREEN)
@@ -119,7 +119,7 @@ def display_winner_screen(winner):
     while True:
         SCREEN.blit(BG, (0, 0))  # Màu nền cho thông báo người thắng
 
-        WINNER_TEXT = get_font(75).render(f"{winner} Wins!", True, "Black")
+        WINNER_TEXT = get_font(75).render(f"{winner} Wins!", True, "White")
         WINNER_RECT = WINNER_TEXT.get_rect(center=(670, 300))
 
         REPLAY_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(440, 500), 
@@ -160,7 +160,7 @@ def main_menu():
         SCREEN.blit(BG, (0, 0))
         MENU_MOUSE_POS = pygame.mouse.get_pos()
 
-        MENU_TEXT = get_font(100).render("CARO GAME", True, "Black")
+        MENU_TEXT = get_font(100).render("CARO GAME", True, "White")
         MENU_RECT = MENU_TEXT.get_rect(center=(640, 120))
 
         PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 490), 
