@@ -53,12 +53,12 @@ current_size_index = 3  # Mặc định là 15x15
 
 # Hàm chính để chơi game
 def play():
-    global player_name  # Sử dụng biến player_name toàn cục
+    global player_name
     board_size = int(board_sizes[current_size_index].split('x')[0])
-    set_board_size(board_size)
-    update_grid_offset()
+    set_board_size(board_size)  # Gọi lại để tính toán offset và kích thước ô bàn cờ
 
     board = [["" for _ in range(get_board_size())] for _ in range(get_board_size())]
+    history = []
 
     while True:
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
@@ -67,50 +67,56 @@ def play():
         draw_grid(SCREEN)
         draw_symbols(SCREEN, board)
 
-        PLAY_BACK = Button(image=None, pos=(660, 795), 
-                           text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
-
+        PLAY_BACK = Button(image=None, pos=(660, 795), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
         PLAY_BACK.changeColor(PLAY_MOUSE_POS)
         PLAY_BACK.update(SCREEN)
+
+        UNDO_BUTTON = Button(image=None, pos=(940, 795), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
+        UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)
+        UNDO_BUTTON.update(SCREEN)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BACK.checkForInput(PLAY_MOUSE_POS):
                     main_menu()
-                
-                # Kiểm tra vị trí click trên lưới
+
+                if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and history:
+                    last_move = history.pop()
+                    row, col, player = last_move
+                    board[row][col] = ""
+
                 row, col = (PLAY_MOUSE_POS[1] - GRID_OFFSET_Y) // CELL_SIZE, (PLAY_MOUSE_POS[0] - GRID_OFFSET_X) // CELL_SIZE
                 if 0 <= row < get_board_size() and 0 <= col < get_board_size() and board[row][col] == "":
-                    board[row][col] = "X"  # Người chơi đánh X
+                    board[row][col] = "X"
+                    history.append((row, col, "X"))
 
-                    # Kiểm tra xem người chơi có thắng không
                     x_wins, winning_positions = check_winner(board, "X")
                     if x_wins:
                         draw_symbols(SCREEN, board)
                         draw_winning_line(SCREEN, winning_positions)
                         pygame.display.update()
-                        pygame.time.delay(1500)  # Đợi 3 giây trước khi hiện thông báo
+                        pygame.time.delay(1500)
                         display_winner_screen(player_name)
 
-                    # Máy đánh O (giả sử đây là lượt đơn giản ngẫu nhiên)
-                    # Có thể cải thiện thành AI để chọn vị trí đánh O thông minh hơn
                     row, col = find_random_empty_spot(board)
                     if row is not None and col is not None:
                         board[row][col] = "O"
-                    
-                    # Kiểm tra xem máy có thắng không
+                        history.append((row, col, "O"))
+
                     o_wins, winning_positions = check_winner(board, "O")
                     if o_wins:
                         draw_symbols(SCREEN, board)
                         draw_winning_line(SCREEN, winning_positions)
                         pygame.display.update()
-                        pygame.time.delay(3000)  # Đợi 3 giây trước khi hiện thông báo
+                        pygame.time.delay(3000)
                         display_winner_screen("O")
 
         pygame.display.update()
+
         
 def find_random_empty_spot(board):
     empty_spots = [(row, col) for row in range(len(board)) for col in range(len(board[0])) if board[row][col] == ""]
@@ -119,13 +125,13 @@ def find_random_empty_spot(board):
         
 def display_winner_screen(winner):
     # Hỏi tên người chơi
-    player_name = "Player"  # Ở đây có thể thêm input để người dùng nhập tên
+    global player_name  # Đảm bảo biến toàn cục
 
     # Lưu kết quả vào bảng xếp hạng
     if winner == "X":
-        save_score(player_name, "Thắng")
+        save_score(player_name, "Lose")
     else:
-        save_score(player_name, "Thua")
+        save_score(player_name, "Win")
 
     while True:
         SCREEN.blit(BG, (0, 0))  # Màu nền cho thông báo người thắng
@@ -163,7 +169,9 @@ def display_winner_screen(winner):
 # menu.py (Thêm hàm display_leaderboard)
 def display_leaderboard():
     leaderboard = load_leaderboard()
-    
+    current_page = 0
+    items_per_page = 10  # Giới hạn 10 mục trên mỗi trang
+
     while True:
         SCREEN.blit(BG, (0, 0))  # Đặt màu nền
 
@@ -172,25 +180,43 @@ def display_leaderboard():
         TITLE_RECT = TITLE_TEXT.get_rect(center=(640, 100))
         SCREEN.blit(TITLE_TEXT, TITLE_RECT)
 
-        # Hiển thị từng dòng trong bảng xếp hạng
-        y_offset = 200
-        for index, entry in enumerate(leaderboard[:20]):  # Hiển thị tối đa 10 mục
-            name_text = get_font(35).render(f"{index+1}. {entry[0]} - {entry[1]}", True, "White")
-            name_rect = name_text.get_rect(center=(640, y_offset))
+        # Hiển thị các mục trên trang hiện tại
+        start_index = current_page * items_per_page
+        end_index = start_index + items_per_page
+        for index, entry in enumerate(leaderboard[start_index:end_index], start=start_index + 1):
+            name_text = get_font(35).render(f"{index}. {entry[0]} - {entry[1]}", True, "White")
+            name_rect = name_text.get_rect(center=(640, 150 + (index - start_index) * 50))
             SCREEN.blit(name_text, name_rect)
-            y_offset += 50  # Khoảng cách giữa các dòng
+
+        # Nút "Previous" (Trang trước)
+        prev_button = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(200, 650),
+                             text_input="Pre", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        
+        prev_button.changeColor(pygame.mouse.get_pos())
+        prev_button.update(SCREEN)
+
+        # Nút "Next" (Trang sau)
+        next_button =  Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(1080, 650),
+                             text_input="Next", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        next_button.changeColor(pygame.mouse.get_pos())
+        next_button.update(SCREEN)
 
         BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 750),
                              text_input="BACK", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
-
         BACK_BUTTON.changeColor(pygame.mouse.get_pos())
         BACK_BUTTON.update(SCREEN)
 
+        # Kiểm tra sự kiện chuột
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if prev_button.checkForInput(pygame.mouse.get_pos()) and current_page > 0:
+                    current_page -= 1  # Chuyển về trang trước
+                if next_button.checkForInput(pygame.mouse.get_pos()) and (current_page + 1) * items_per_page < len(leaderboard):
+                    current_page += 1  # Chuyển đến trang sau
                 if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
                     return  # Trở về màn hình trước
 

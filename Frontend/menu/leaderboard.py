@@ -21,3 +21,4 @@ def load_leaderboard():
         # File chưa tồn tại, không cần làm gì thêm
         pass
     return leaderboard
+
