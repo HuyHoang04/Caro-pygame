@@ -37,8 +37,7 @@ def update_grid_offset():
     GRID_OFFSET_X = (WIDTH - total_width) // 2
     GRID_OFFSET_Y = (HEIGHT - total_height) // 2
     
-    # Kiểm tra lại các giá trị GRID_OFFSET_X và GRID_OFFSET_Y
-    print(f"GRID_OFFSET_X: {GRID_OFFSET_X}, GRID_OFFSET_Y: {GRID_OFFSET_Y}")
+
 
 # Hàm thay đổi kích thước bàn cờ và tự động căn giữa
 def set_board_size(board_size):

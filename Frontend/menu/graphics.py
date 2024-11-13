@@ -1,26 +1,6 @@
 import pygame
 from constants import *
 
-def set_board_size(board_size):
-    """
-    Hàm này dùng để tính toán lại kích thước bàn cờ và căn giữa nó trên màn hình.
-    """
-    global GRID_OFFSET_X, GRID_OFFSET_Y, CELL_SIZE
-    
-    # Tính toán lại offset và các thông số liên quan khi thay đổi kích thước bàn cờ
-    GRID_SIZE = board_size  # Kích thước bàn cờ (số lượng ô trên một chiều)
-    
-    # Cập nhật lại CELL_SIZE nếu cần (ví dụ muốn thay đổi kích thước ô)
-    if GRID_SIZE > 15:
-        CELL_SIZE = 40
-    elif GRID_SIZE > 10:
-        CELL_SIZE = 50
-    else:
-        CELL_SIZE = 60
-
-    # Tính toán lại vị trí căn giữa bàn cờ
-    GRID_OFFSET_X = (SCREEN_WIDTH - GRID_SIZE * CELL_SIZE) // 2
-    GRID_OFFSET_Y = (SCREEN_HEIGHT - GRID_SIZE * CELL_SIZE) // 2
 
 
 def draw_grid(screen):
