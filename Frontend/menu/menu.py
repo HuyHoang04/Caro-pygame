@@ -4,7 +4,6 @@ from button import Button
 from constants import *
 from graphics import draw_grid, draw_symbols, draw_winning_line
 from checkwin import check_winner
-from test import find_best_move
 from leaderboard import save_score, load_leaderboard
 
 
@@ -55,7 +54,6 @@ current_size_index = 3  # Mặc định là 15x15
 def play():
     global player_name
     board_size = int(board_sizes[current_size_index].split('x')[0])
-    set_board_size(board_size)  # Gọi lại để tính toán offset và kích thước ô bàn cờ
 
     board = [["" for _ in range(get_board_size())] for _ in range(get_board_size())]
     history = []
@@ -299,11 +297,11 @@ def main_menu():
                     current_level_index = (current_level_index + 1) % len(levels)
                 if LEFT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index - 1) % len(board_sizes)
-                    set_board_size(int(board_sizes[current_size_index].split('x')[0]))
+
                     update_grid_offset()
                 if RIGHT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index + 1) % len(board_sizes)
-                    set_board_size(int(board_sizes[current_size_index].split('x')[0]))
+
                     update_grid_offset()
 
             # Nhận nhập liệu từ bàn phím

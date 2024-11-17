@@ -4,7 +4,7 @@ import pygame, random
 pygame.init()
 
 # Thiết lập kích thước bảng và các biến
-N = 18  # Kích thước ma trận ban đầu
+N = 20  # Kích thước ma trận ban đầu
 WIN_CONDITION = 5  # Số ký tự liên tiếp để thắng
 CELL_SIZE = 35  # Kích thước mỗi ô vuông
 WIDTH = 1280  # Đảm bảo kích thước này trùng với SCREEN trong menu.py
@@ -39,21 +39,7 @@ def update_grid_offset():
     
 
 
-# Hàm thay đổi kích thước bàn cờ và tự động căn giữa
-def set_board_size(board_size):
-    global N, CELL_SIZE
-    N = board_size  # Cập nhật lại kích thước bàn cờ
-    
-    # Cập nhật CELL_SIZE theo kích thước bàn cờ (có thể thay đổi theo yêu cầu)
-    if N > 15:
-        CELL_SIZE = 40
-    elif N > 10:
-        CELL_SIZE = 50
-    else:
-        CELL_SIZE = 60
-    
-    # Gọi hàm cập nhật lại GRID_OFFSET_X, GRID_OFFSET_Y
-    update_grid_offset()
+# Hàm thay đổi kích thước bàn cờ và tự động căn giữ
 
 def get_board_size():
     return N
