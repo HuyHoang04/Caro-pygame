@@ -47,16 +47,18 @@ def draw_input_box(SCREEN, x, y, width, height, text, font, base_color, active_c
 levels = ["EASY", "MEDIUM", "HARD"]
 current_level_index = 0
 
-board_sizes = ["8x8", "10x10", "15x15", "18x18"]
-current_size_index = 3  # Mặc định là 15x15
+mode = ["PLAYER", "COMPUTER"]
+current_mode_index = 1
 
 # Hàm chính để chơi game
 def play():
     global player_name
     board_size = int(board_sizes[current_size_index].split('x')[0])
 
-    board = [["" for _ in range(get_board_size())] for _ in range(get_board_size())]
-    history = []
+    # Khởi tạo bàn cờ
+    board = [["" for _ in range(N)] for _ in range(N)]
+    history = []  # Lưu tất cả các nước đi của X và O
+    turn = 0  # 0 là lượt của X (người chơi), 1 là lượt của O (người chơi)
 
     while True:
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
@@ -82,38 +84,87 @@ def play():
                 if PLAY_BACK.checkForInput(PLAY_MOUSE_POS):
                     main_menu()
 
-                if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and history:
-                    last_move = history.pop()
-                    row, col, player = last_move
+                if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and len(history) >= 2:
+                    # Nếu history có đủ ít nhất 2 nước đi (1 của X và 1 của O)
+                    last_move_o = history.pop()  # Lấy nước đi của O
+                    last_move_x = history.pop()  # Lấy nước đi của X
+
+                    # Hoàn tác nước đi của O
+                    row, col, player = last_move_o
                     board[row][col] = ""
 
-                row, col = (PLAY_MOUSE_POS[1] - GRID_OFFSET_Y) // CELL_SIZE, (PLAY_MOUSE_POS[0] - GRID_OFFSET_X) // CELL_SIZE
-                if 0 <= row < get_board_size() and 0 <= col < get_board_size() and board[row][col] == "":
-                    board[row][col] = "X"
-                    history.append((row, col, "X"))
+                    # Hoàn tác nước đi của X
+                    row, col, player = last_move_x
+                    board[row][col] = ""
 
-                    x_wins, winning_positions = check_winner(board, "X")
-                    if x_wins:
-                        draw_symbols(SCREEN, board)
-                        draw_winning_line(SCREEN, winning_positions)
-                        pygame.display.update()
-                        pygame.time.delay(1500)
-                        display_winner_screen(player_name)
+                    turn -= 2  # Quay lại lượt trước đó (đưa lượt về X nếu đang ở lượt O, hoặc ngược lại)
 
-                    row, col = find_random_empty_spot(board)
-                    if row is not None and col is not None:
-                        board[row][col] = "O"
-                        history.append((row, col, "O"))
+                else:
+                    row, col = (PLAY_MOUSE_POS[1] - GRID_OFFSET_Y) // CELL_SIZE, (PLAY_MOUSE_POS[0] - GRID_OFFSET_X) // CELL_SIZE
+                    if 0 <= row < N and 0 <= col < N and board[row][col] == "":
+                        if current_mode_index == 0:  # Chế độ chơi với người (Player vs Player)
+                            if turn % 2 == 0:  # Lượt của người chơi X
+                                board[row][col] = "X"
+                                history.append((row, col, "X"))  # Lưu nước đi của X
+                                # Kiểm tra nếu người chơi X thắng
+                                x_wins, winning_positions = check_winner(board, "X")
+                                if x_wins:
+                                    draw_symbols(SCREEN, board)
+                                    draw_winning_line(SCREEN, winning_positions)
+                                    pygame.display.update()
+                                    pygame.time.delay(1500)
+                                    display_winner_screen(player_name)
+                                    return
+                            else:  # Lượt của người chơi O
+                                board[row][col] = "O"
+                                history.append((row, col, "O"))  # Lưu nước đi của O
+                                # Kiểm tra nếu người chơi O thắng
+                                o_wins, winning_positions = check_winner(board, "O")
+                                if o_wins:
+                                    draw_symbols(SCREEN, board)
+                                    draw_winning_line(SCREEN, winning_positions)
+                                    pygame.display.update()
+                                    pygame.time.delay(1500)
+                                    display_winner_screen("O")
+                                    return
+                            turn += 1  # Sau mỗi lượt của X hoặc O, chúng ta tăng biến turn để chuyển lượt
 
-                    o_wins, winning_positions = check_winner(board, "O")
-                    if o_wins:
-                        draw_symbols(SCREEN, board)
-                        draw_winning_line(SCREEN, winning_positions)
-                        pygame.display.update()
-                        pygame.time.delay(3000)
-                        display_winner_screen("O")
+                        elif current_mode_index == 1:  # Chế độ chơi với máy (Player vs Computer)
+                            if turn % 2 == 0:  # Lượt của người chơi X
+                                board[row][col] = "X"
+                                history.append((row, col, "X"))  # Lưu nước đi của X
+                                # Kiểm tra nếu người chơi X thắng
+                                x_wins, winning_positions = check_winner(board, "X")
+                                if x_wins:
+                                    draw_symbols(SCREEN, board)
+                                    draw_winning_line(SCREEN, winning_positions)
+                                    pygame.display.update()
+                                    pygame.time.delay(1500)
+                                    display_winner_screen(player_name)
+                                    return
+                                turn += 1  # Chuyển lượt sang O (máy)
 
+                                # Máy đánh O (sau khi X đánh)
+                                if turn % 2 == 1:  # Lượt của máy O
+                                    row, col = find_random_empty_spot(board)
+                                    if row is not None and col is not None:
+                                        board[row][col] = "O"
+                                        history.append((row, col, "O"))  # Lưu nước đi của O
+                                        # Kiểm tra nếu máy O thắng
+                                        o_wins, winning_positions = check_winner(board, "O")
+                                        if o_wins:
+                                            draw_symbols(SCREEN, board)
+                                            draw_winning_line(SCREEN, winning_positions)
+                                            pygame.display.update()
+                                            pygame.time.delay(3000)
+                                            display_winner_screen("O")
+                                            return
+                                        turn += 1  # Chuyển lượt sang X (người chơi)
         pygame.display.update()
+
+
+
+
 
         
 def find_random_empty_spot(board):
@@ -224,9 +275,7 @@ def display_leaderboard():
 # Hàm menu chính
 # Hàm menu chính
 def main_menu():
-    global current_level_index, current_size_index,  player_name
-
-  
+    global current_level_index, current_size_index,  player_name, current_mode_index
     input_active = False  # Kiểm tra xem ô nhập liệu có được chọn không
     cursor_visible = False  # Biến xác định con trỏ có hiển thị không
     last_cursor_toggle_time = 0  # Thời gian lần cuối cùng thay đổi trạng thái con trỏ nhấp nháy
@@ -239,10 +288,10 @@ def main_menu():
         MENU_TEXT = get_font(100).render("CARO GAME", True, "White")
         MENU_RECT = MENU_TEXT.get_rect(center=(640, 120))
 
-        PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 490), 
+        PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 570), 
                              text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
 
-        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 650), 
+        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 720), 
                              text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
 
         LEFT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(440, 300), 
@@ -262,6 +311,16 @@ def main_menu():
 
         SIZE_TEXT = get_font(35).render(board_sizes[current_size_index], True, "#d7fcd4")
         SIZE_RECT = SIZE_TEXT.get_rect(center=(640, 370))
+        
+          # Thêm mũi tên điều chỉnh chế độ chơi (PLAYER vs COMPUTER)
+        LEFT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(440, 440), 
+                                 text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+        
+        RIGHT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(840, 440), 
+                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+
+        MODE_TEXT = get_font(35).render(mode[current_mode_index], True, "#d7fcd4")
+        MODE_RECT = MODE_TEXT.get_rect(center=(640, 440))
 
         # Vẽ ô nhập tên người chơi với con trỏ nhấp nháy
         input_box = draw_input_box(SCREEN, 440, 200, 400, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
@@ -269,8 +328,9 @@ def main_menu():
         SCREEN.blit(MENU_TEXT, MENU_RECT)
         SCREEN.blit(LEVEL_TEXT, LEVEL_RECT)
         SCREEN.blit(SIZE_TEXT, SIZE_RECT)
+        SCREEN.blit(MODE_TEXT, MODE_RECT)
 
-        for button in [PLAY_BUTTON, QUIT_BUTTON, LEFT_ARROW_LEVEL, RIGHT_ARROW_LEVEL, LEFT_ARROW_SIZE, RIGHT_ARROW_SIZE]:
+        for button in [PLAY_BUTTON, QUIT_BUTTON, LEFT_ARROW_LEVEL, RIGHT_ARROW_LEVEL, LEFT_ARROW_SIZE, RIGHT_ARROW_SIZE,LEFT_ARROW_MODE, RIGHT_ARROW_MODE]:
             button.changeColor(MENU_MOUSE_POS)
             button.update(SCREEN)
 
@@ -298,11 +358,15 @@ def main_menu():
                 if LEFT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index - 1) % len(board_sizes)
 
-                    update_grid_offset()
+                    
                 if RIGHT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index + 1) % len(board_sizes)
 
-                    update_grid_offset()
+                # Chuyển đổi chế độ chơi giữa "PLAYER" và "COMPUTER"
+                if LEFT_ARROW_MODE.checkForInput(MENU_MOUSE_POS):
+                    current_mode_index = (current_mode_index - 1) % len(mode)
+                if RIGHT_ARROW_MODE.checkForInput(MENU_MOUSE_POS):
+                    current_mode_index = (current_mode_index + 1) % len(mode)
 
             # Nhận nhập liệu từ bàn phím
             if event.type == pygame.KEYDOWN:

@@ -2,7 +2,7 @@
 from constants import *
 
 def check_winner(board, symbol):
-    size = get_board_size()
+    size = N
     win_length = 5  # Số ký tự liên tiếp cần có để thắng
     
     # Kiểm tra theo hàng ngang
