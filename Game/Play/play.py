@@ -12,7 +12,10 @@ pygame.init()
 SCREEN = pygame.display.set_mode((1280, 850))
 pygame.display.set_caption("Menu")
 BG = pygame.image.load("assets/Background3.jpg")
-sound = pygame.mixer.Sound
+sound = pygame.mixer.Sound("assets/soundBG.mp3")
+sound.set_volume(0.5)
+sound.play()
+button_click_sound = pygame.mixer.Sound("assets/buttonclick.mp3")
 player_name = ""
 
 def get_font(size):
@@ -70,9 +73,11 @@ def play():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BACK.checkForInput(PLAY_MOUSE_POS):
+                    button_click_sound.play()  
                     main_menu()
 
                 if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and len(history) >= 2:
+                    button_click_sound.play()  
                     last_move_o = history.pop()
                     last_move_x = history.pop() 
 
@@ -184,10 +189,13 @@ def display_winner_screen(winner):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if REPLAY_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    button_click_sound.play()  
                     play()  
                 if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    button_click_sound.play()  
                     main_menu()  
                 if SCORE_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    button_click_sound.play()  
                     display_leaderboard() 
         pygame.display.update()
 
@@ -225,15 +233,19 @@ def display_leaderboard():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                button_click_sound.play()  
                 pygame.quit()
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PREV_BUTTON.checkForInput(pygame.mouse.get_pos()) and current_page > 0:
+                    button_click_sound.play()  
                     current_page -= 1 
                 if NEXT_BUTTON.checkForInput(pygame.mouse.get_pos()) and (current_page + 1) * items_per_page < len(leaderboard):
+                    button_click_sound.play()  
                     current_page += 1  
                 if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    button_click_sound.play()  
                     return  
 
         pygame.display.update()
@@ -307,27 +319,35 @@ def main_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    button_click_sound.play()  
                     play()
                 if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    button_click_sound.play()  
                     pygame.quit()
                     sys.exit()
                 if LEFT_ARROW_LEVEL.checkForInput(MENU_MOUSE_POS):
+                   
                     current_level_index = (current_level_index - 1) % len(levels)
                 if RIGHT_ARROW_LEVEL.checkForInput(MENU_MOUSE_POS):
+                    button_click_sound.play()  
                     current_level_index = (current_level_index + 1) % len(levels)
                 if LEFT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
+                    
                     current_size_index = (current_size_index - 1) % len(board_sizes)
                     set_board_size(int(board_sizes[current_size_index].split('x')[0]))
 
 
                 if RIGHT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
+                    button_click_sound.play()  
                     current_size_index = (current_size_index + 1) % len(board_sizes)
                     set_board_size(int(board_sizes[current_size_index].split('x')[0]))
 
 
                 if LEFT_ARROW_MODE.checkForInput(MENU_MOUSE_POS):
+                   
                     current_mode_index = (current_mode_index - 1) % len(mode)
                 if RIGHT_ARROW_MODE.checkForInput(MENU_MOUSE_POS):
+                    button_click_sound.play()  
                     current_mode_index = (current_mode_index + 1) % len(mode)
 
             # Nhận nhập liệu từ bàn phím
