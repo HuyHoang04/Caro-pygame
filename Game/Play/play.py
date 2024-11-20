@@ -1,13 +1,105 @@
-# menu.py
 import pygame, sys, random, pyperclip
-from button import Button
-from constants import *
-from checkwin import check_winner
-from leaderboard import save_score, load_leaderboard
 
-
+# Thiết lập các biến và hằng số
 pygame.init()
 
+N = 18
+WIN_CONDITION = 5
+CELL_SIZE = 35
+WIDTH = 1000
+HEIGHT = 1080
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BACKGROUND_COLOR = pygame.image.load("assets/Background3.jpg")
+LINE_WIDTH = 2
+FRAME_COLOR = (0, 128, 128)
+FRAME_WIDTH = 6
+board_sizes = ["8x8", "10x10", "15x15", "18x18"]
+current_size_index = 2
+
+levels = ["Easy", "Medium","Hard"]
+current_level_index = 1
+
+mode = ["Player vs Player", "Player vs Computer"]
+current_mode_index = 0
+
+# Tải các biểu tượng X và O
+ICON_X = pygame.image.load("assets/iconX.png")
+ICON_O = pygame.image.load("assets/iconO.png")
+ICON_X = pygame.transform.scale(ICON_X, (CELL_SIZE - 10, CELL_SIZE - 10))
+ICON_O = pygame.transform.scale(ICON_O, (CELL_SIZE - 10, CELL_SIZE - 10))
+
+# Các chức năng hỗ trợ
+def update_grid_offset():
+    global GRID_OFFSET_X, GRID_OFFSET_Y
+    total_width = N * CELL_SIZE
+    total_height = N * CELL_SIZE
+    GRID_OFFSET_X = (WIDTH - total_width) // 4
+    GRID_OFFSET_Y = (HEIGHT - total_height) // 4
+
+def set_board_size(size):
+    global N
+    N = size
+    update_grid_offset()
+
+def get_board_size():
+    return N
+
+def get_board_position(mouse_pos):
+    x, y = mouse_pos
+    if GRID_OFFSET_X <= x < GRID_OFFSET_X + N * CELL_SIZE and GRID_OFFSET_Y <= y < GRID_OFFSET_Y + N * CELL_SIZE:
+        row = (y - GRID_OFFSET_Y) // CELL_SIZE
+        col = (x - GRID_OFFSET_X) // CELL_SIZE
+        return row, col
+    return None, None
+
+def get_random_empty_cell(board):
+    empty_cells = [(r, c) for r in range(N) for c in range(N) if board[r][c] == ""]
+    if empty_cells:
+        return random.choice(empty_cells)
+    return None, None
+
+def draw_grid(screen):
+    """
+    Vẽ lưới bàn cờ vào màn hình.
+    """
+    screen.blit(BACKGROUND_COLOR, (0, 0))
+    pygame.draw.rect(screen, FRAME_COLOR, (GRID_OFFSET_X - FRAME_WIDTH, GRID_OFFSET_Y - FRAME_WIDTH, N * CELL_SIZE + 2 * FRAME_WIDTH, N * CELL_SIZE + 2 * FRAME_WIDTH))
+    pygame.draw.rect(screen, BLACK, (GRID_OFFSET_X, GRID_OFFSET_Y, N * CELL_SIZE, N * CELL_SIZE))
+
+    for i in range(1, N):
+        pygame.draw.line(screen, WHITE, (GRID_OFFSET_X, GRID_OFFSET_Y + CELL_SIZE * i), (GRID_OFFSET_X + N * CELL_SIZE, GRID_OFFSET_Y + CELL_SIZE * i), LINE_WIDTH)
+        pygame.draw.line(screen, WHITE, (GRID_OFFSET_X + CELL_SIZE * i, GRID_OFFSET_Y), (GRID_OFFSET_X + CELL_SIZE * i, GRID_OFFSET_Y + N * CELL_SIZE), LINE_WIDTH)
+
+def draw_symbols(screen, board):
+    """
+    Vẽ các ký hiệu "X" và "O" vào bàn cờ.
+    """
+    for row in range(N):
+        for col in range(N):
+            if board[row][col] == "X":
+                screen.blit(ICON_X, (GRID_OFFSET_X + col * CELL_SIZE + 5, GRID_OFFSET_Y + row * CELL_SIZE + 5))
+            elif board[row][col] == "O":
+                screen.blit(ICON_O, (GRID_OFFSET_X + col * CELL_SIZE + 5, GRID_OFFSET_Y + row * CELL_SIZE + 5))
+
+def draw_winning_line(screen, positions):
+    if not positions:
+        return
+    start_pos = positions[0]
+    end_pos = positions[-1]
+    start_x = GRID_OFFSET_X + start_pos[1] * CELL_SIZE + CELL_SIZE // 2
+    start_y = GRID_OFFSET_Y + start_pos[0] * CELL_SIZE + CELL_SIZE // 2
+    end_x = GRID_OFFSET_X + end_pos[1] * CELL_SIZE + CELL_SIZE // 2
+    end_y = GRID_OFFSET_Y + end_pos[0] * CELL_SIZE + CELL_SIZE // 2
+
+    # Vẽ đường thắng
+    pygame.draw.line(screen, RED, (start_x, start_y), (end_x, end_y), LINE_WIDTH * 2)
+
+# Các phần còn lại của chương trình (menu, chơi game, v.v.)
+from button import Button
+from checkwin import check_winner
+from leaderboard import save_score, load_leaderboard
 
 SCREEN = pygame.display.set_mode((1280, 850))
 pygame.display.set_caption("Menu")
@@ -21,30 +113,18 @@ player_name = ""
 def get_font(size):
     return pygame.font.Font("assets/font.ttf", size)
 
-
 def draw_input_box(SCREEN, x, y, width, height, text, font, base_color, active_color, cursor_visible):
-
     input_box = pygame.Rect(x, y, width, height)
     pygame.draw.rect(SCREEN, base_color, input_box) 
     text_surface = font.render(text, True, (0, 0, 0))  
     text_rect = text_surface.get_rect(center=input_box.center)  
     SCREEN.blit(text_surface, text_rect)
-    
     if cursor_visible:
         cursor_rect = pygame.Rect(text_rect.right + 5, text_rect.top, 2, text_rect.height)
         pygame.draw.rect(SCREEN, (0, 0, 0), cursor_rect) 
     return input_box
 
-board_sizes = ["8x8", "10x10", "15x15", "18x18"]  
-current_size_index = 3
-
-levels = ["EASY", "MEDIUM", "HARD"]
-current_level_index = 0
-
-mode = ["PLAYER", "COMPUTER"]
-current_mode_index = 1
-
-
+# Các hàm game play, main menu, display winner, display leaderboard v.v...
 def play():
     global player_name
     board_size = int(board_sizes[current_size_index].split('x')[0]) 
@@ -53,7 +133,7 @@ def play():
     board = [["" for _ in range(N)] for _ in range(N)]
     set_board_size(board_size)
     history = [] 
-    turn = 0 
+    turn = 0
 
     while True:
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
@@ -73,31 +153,23 @@ def play():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BACK.checkForInput(PLAY_MOUSE_POS):
-                    button_click_sound.play()  
                     main_menu()
 
                 if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and len(history) >= 2:
-                    button_click_sound.play()  
                     last_move_o = history.pop()
-                    last_move_x = history.pop() 
-
-                    # Hoàn tác nước đi của O
+                    last_move_x = history.pop()
                     row, col, player = last_move_o
                     board[row][col] = ""
-
-                    # Hoàn tác nước đi của X
                     row, col, player = last_move_x
                     board[row][col] = ""
-                    turn -= 2 
-
+                    turn -= 2
                 else:
                     row, col = (PLAY_MOUSE_POS[1] - GRID_OFFSET_Y) // CELL_SIZE, (PLAY_MOUSE_POS[0] - GRID_OFFSET_X) // CELL_SIZE
                     if 0 <= row < N and 0 <= col < N and board[row][col] == "":
-                        if current_mode_index == 0:  # Chế độ chơi với người (Player vs Player)
-                            if turn % 2 == 0:  # Lượt của người chơi X
+                        if current_mode_index == 0:  # Player vs Player
+                            if turn % 2 == 0:  # Người chơi đánh X
                                 board[row][col] = "X"
-                                history.append((row, col, "X"))  # Lưu nước đi của X
-                                # Kiểm tra nếu người chơi X thắng
+                                history.append((row, col, "X"))
                                 x_wins, winning_positions = check_winner(board, "X")
                                 if x_wins:
                                     draw_symbols(SCREEN, board)
@@ -106,10 +178,9 @@ def play():
                                     pygame.time.delay(1500)
                                     display_winner_screen(player_name)
                                     return
-                            else:  # Lượt của người chơi O
+                            else:  # Người chơi đánh O
                                 board[row][col] = "O"
-                                history.append((row, col, "O"))  # Lưu nước đi của O
-                                # Kiểm tra nếu người chơi O thắng
+                                history.append((row, col, "O"))
                                 o_wins, winning_positions = check_winner(board, "O")
                                 if o_wins:
                                     draw_symbols(SCREEN, board)
@@ -118,13 +189,11 @@ def play():
                                     pygame.time.delay(1500)
                                     display_winner_screen("O")
                                     return
-                            turn += 1  # Sau mỗi lượt của X hoặc O, chúng ta tăng biến turn để chuyển lượt
-
-                        elif current_mode_index == 1:  # Chế độ chơi với máy (Player vs Computer)
-                            if turn % 2 == 0:  # Lượt của người chơi X
+                            turn += 1
+                        elif current_mode_index == 1:  # Player vs Computer
+                            if turn % 2 == 0:  # Người chơi đánh X
                                 board[row][col] = "X"
-                                history.append((row, col, "X"))  # Lưu nước đi của X
-                                # Kiểm tra nếu người chơi X thắng
+                                history.append((row, col, "X"))
                                 x_wins, winning_positions = check_winner(board, "X")
                                 if x_wins:
                                     draw_symbols(SCREEN, board)
@@ -133,26 +202,25 @@ def play():
                                     pygame.time.delay(1500)
                                     display_winner_screen(player_name)
                                     return
-                                turn += 1  # Chuyển lượt sang O (máy)
-
-                                # Máy đánh O (sau khi X đánh)
-                                if turn % 2 == 1:  # Lượt của máy O
-                                    row, col = find_random_empty_spot(board)
-                                    if row is not None and col is not None:
-                                        board[row][col] = "O"
-                                        history.append((row, col, "O"))  # Lưu nước đi của O
-                                        # Kiểm tra nếu máy O thắng
-                                        o_wins, winning_positions = check_winner(board, "O")
-                                        if o_wins:
-                                            draw_symbols(SCREEN, board)
-                                            draw_winning_line(SCREEN, winning_positions)
-                                            pygame.display.update()
-                                            pygame.time.delay(3000)
-                                            display_winner_screen("O")
-                                            return
-                                        turn += 1  # Chuyển lượt sang X (người chơi)
-                                        
+                                turn += 1  # Chuyển lượt
+                                
+                                # Máy đánh O ngay lập tức sau khi người chơi đánh X
+                                row, col = find_random_empty_spot(board)  # Hàm này sẽ tìm ô trống cho máy
+                                board[row][col] = "O"
+                                history.append((row, col, "O"))
+                                o_wins, winning_positions = check_winner(board, "O")
+                                if o_wins:
+                                    draw_symbols(SCREEN, board)
+                                    draw_winning_line(SCREEN, winning_positions)
+                                    pygame.display.update()
+                                    pygame.time.delay(1500)
+                                    display_winner_screen("O")
+                                    return
+                                turn += 1  # Chuyển lượt
         pygame.display.update()
+
+
+
 
         
 def find_random_empty_spot(board):
@@ -189,13 +257,13 @@ def display_winner_screen(winner):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if REPLAY_BUTTON.checkForInput(pygame.mouse.get_pos()):
-                    button_click_sound.play()  
+                  
                     play()  
                 if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
-                    button_click_sound.play()  
+                   
                     main_menu()  
                 if SCORE_BUTTON.checkForInput(pygame.mouse.get_pos()):
-                    button_click_sound.play()  
+                   
                     display_leaderboard() 
         pygame.display.update()
 
@@ -233,19 +301,19 @@ def display_leaderboard():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                button_click_sound.play()  
+               
                 pygame.quit()
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PREV_BUTTON.checkForInput(pygame.mouse.get_pos()) and current_page > 0:
-                    button_click_sound.play()  
+                    
                     current_page -= 1 
                 if NEXT_BUTTON.checkForInput(pygame.mouse.get_pos()) and (current_page + 1) * items_per_page < len(leaderboard):
-                    button_click_sound.play()  
+                   
                     current_page += 1  
                 if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
-                    button_click_sound.play()  
+                   
                     return  
 
         pygame.display.update()
@@ -288,9 +356,9 @@ def main_menu():
         SIZE_RECT = SIZE_TEXT.get_rect(center=(640, 370))
         
           
-        LEFT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(440, 440), 
+        LEFT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(260, 440), 
                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
-        RIGHT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(840, 440), 
+        RIGHT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(1000, 440), 
                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
 
         MODE_TEXT = get_font(35).render(mode[current_mode_index], True, "#d7fcd4")
@@ -319,17 +387,17 @@ def main_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    button_click_sound.play()  
+                  
                     play()
                 if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    button_click_sound.play()  
+                    
                     pygame.quit()
                     sys.exit()
                 if LEFT_ARROW_LEVEL.checkForInput(MENU_MOUSE_POS):
                    
                     current_level_index = (current_level_index - 1) % len(levels)
                 if RIGHT_ARROW_LEVEL.checkForInput(MENU_MOUSE_POS):
-                    button_click_sound.play()  
+                   
                     current_level_index = (current_level_index + 1) % len(levels)
                 if LEFT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     
@@ -338,7 +406,7 @@ def main_menu():
 
 
                 if RIGHT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
-                    button_click_sound.play()  
+                   
                     current_size_index = (current_size_index + 1) % len(board_sizes)
                     set_board_size(int(board_sizes[current_size_index].split('x')[0]))
 
@@ -347,7 +415,7 @@ def main_menu():
                    
                     current_mode_index = (current_mode_index - 1) % len(mode)
                 if RIGHT_ARROW_MODE.checkForInput(MENU_MOUSE_POS):
-                    button_click_sound.play()  
+                     
                     current_mode_index = (current_mode_index + 1) % len(mode)
 
             # Nhận nhập liệu từ bàn phím
