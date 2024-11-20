@@ -1,4 +1,4 @@
-# leaderboard.py
+
 import csv
 from constants import *
 
@@ -12,19 +12,16 @@ def save_score(player_name, status):
             writer.writerow([player_name, status])
 
 
-
-# Hàm đọc bảng xếp hạng từ file
 def load_leaderboard():
     leaderboard = []
     try:
         with open(LEADERBOARD_FILE, mode="r") as file:
             reader = csv.reader(file)
             for row in reader:
-                if len(row) >= 2:  # Đảm bảo dòng có ít nhất 2 phần tử
+                if len(row) >= 2:  
                     leaderboard.append(row)
 
     except FileNotFoundError:
-        # File chưa tồn tại, không cần làm gì thêm
         pass
     return leaderboard
 

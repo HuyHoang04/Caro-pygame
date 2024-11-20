@@ -22,7 +22,7 @@ pygame.display.set_caption("Gomoku: Player vs AI")
 
 # Difficulty levels
 EASY, MEDIUM, HARD, VERY_HARD = 1, 2, 3, 4
-AI_DIFFICULTY = VERY_HARD  # Change this to EASY, MEDIUM, or HARD
+AI_DIFFICULTY = HARD  # Change this to EASY, MEDIUM, or HARD
 
 def draw_board(screen, grid_size, cell_size):
     screen.fill(WHITE)
