@@ -6,8 +6,8 @@ pygame.init()
 N =  18
 WIN_CONDITION = 5  
 CELL_SIZE = 35  
-WIDTH = 1280  
-HEIGHT = 850 
+WIDTH = 1000  
+HEIGHT = 1080 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0) 
@@ -28,8 +28,8 @@ def update_grid_offset():
     global GRID_OFFSET_X, GRID_OFFSET_Y
     total_width = N * CELL_SIZE
     total_height = N * CELL_SIZE
-    GRID_OFFSET_X = (WIDTH - total_width) // 2
-    GRID_OFFSET_Y = (HEIGHT - total_height) // 2
+    GRID_OFFSET_X = (WIDTH - total_width) // 4
+    GRID_OFFSET_Y = (HEIGHT - total_height) // 4
     
 def set_board_size(size):
     global N

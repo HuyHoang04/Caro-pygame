@@ -12,6 +12,7 @@ pygame.init()
 SCREEN = pygame.display.set_mode((1280, 850))
 pygame.display.set_caption("Menu")
 BG = pygame.image.load("assets/Background3.jpg")
+sound = pygame.mixer.Sound
 player_name = ""
 
 def get_font(size):
@@ -56,10 +57,10 @@ def play():
         SCREEN.fill("black")
         draw_grid(SCREEN)
         draw_symbols(SCREEN, board)
-        PLAY_BACK = Button(image=None, pos=(660, 795), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
+        PLAY_BACK = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(1030, 560), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
         PLAY_BACK.changeColor(PLAY_MOUSE_POS)
         PLAY_BACK.update(SCREEN)
-        UNDO_BUTTON = Button(image=None, pos=(940, 795), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
+        UNDO_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(1030, 695), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
         UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)
         UNDO_BUTTON.update(SCREEN)
 
