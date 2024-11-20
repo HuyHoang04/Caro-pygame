@@ -4,8 +4,8 @@ import pygame, random
 pygame.init()
 
 # Thiết lập kích thước bảng và các biến
-board_sizes = ["8x8", "10x10", "15x15", "18x18"]  # Các kích thước bảng
-current_size_index = 3  # Kích thước mặc định (8x8)
+board_sizes = ["8x8", "10x10", "15x15", "18x18", "20x20"]  # Các kích thước bảng
+current_size_index = 0  
 N = int(board_sizes[current_size_index].split('x')[0])  # Kích thước ma trận ban đầu
 WIN_CONDITION = 5  # Số ký tự liên tiếp để thắng
 CELL_SIZE = 35  # Kích thước mỗi ô vuông
@@ -56,3 +56,64 @@ def get_random_empty_cell(board):
 
 # Gọi cập nhật lần đầu tiên
 update_grid_offset()
+
+import pygame
+from constants import *
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#Vẽ lưới bàn cờ và khung bàn cờ
+def draw_grid(screen):
+    """
+    Vẽ lưới bàn cờ vào màn hình.
+    """
+    screen.blit(BACKGROUND_COLOR, (0, 0))  # Đặt màu nền cho màn hình
+
+
+    pygame.draw.rect(screen, FRAME_COLOR, 
+                     (GRID_OFFSET_X - FRAME_WIDTH, GRID_OFFSET_Y - FRAME_WIDTH, 
+                      N * CELL_SIZE + 2 * FRAME_WIDTH, N * CELL_SIZE + 2 * FRAME_WIDTH))
+
+
+    pygame.draw.rect(screen, BLACK, 
+                     (GRID_OFFSET_X, GRID_OFFSET_Y, N * CELL_SIZE, N * CELL_SIZE))
+
+
+    for i in range(1, N):
+        pygame.draw.line(screen, WHITE, 
+                         (GRID_OFFSET_X, GRID_OFFSET_Y + CELL_SIZE * i), 
+                         (GRID_OFFSET_X + N * CELL_SIZE, GRID_OFFSET_Y + CELL_SIZE * i), LINE_WIDTH)
+        pygame.draw.line(screen, WHITE, 
+                         (GRID_OFFSET_X + CELL_SIZE * i, GRID_OFFSET_Y), 
+                         (GRID_OFFSET_X + CELL_SIZE * i, GRID_OFFSET_Y + N * CELL_SIZE), LINE_WIDTH)
+
+
+def draw_symbols(screen, board):
+    """
+    Vẽ các ký hiệu "X" và "O" vào bàn cờ.
+    """
+    for row in range(N):
+        for col in range(N):
+            if board[row][col] == "X":
+                screen.blit(ICON_X, (GRID_OFFSET_X + col * CELL_SIZE + 5, GRID_OFFSET_Y + row * CELL_SIZE + 5))
+            elif board[row][col] == "O":
+                screen.blit(ICON_O, (GRID_OFFSET_X + col * CELL_SIZE + 5, GRID_OFFSET_Y + row * CELL_SIZE + 5))
+
+
+def draw_winning_line(screen, positions):
+    """
+    Vẽ đường thắng nếu có người chiến thắng.
+    """
+    if not positions:
+        return
+
+    start_pos = positions[0]
+    end_pos = positions[-1]
+
+    start_x = GRID_OFFSET_X + start_pos[1] * CELL_SIZE + CELL_SIZE // 2
+    start_y = GRID_OFFSET_Y + start_pos[0] * CELL_SIZE + CELL_SIZE // 2
+    end_x = GRID_OFFSET_X + end_pos[1] * CELL_SIZE + CELL_SIZE // 2
+    end_y = GRID_OFFSET_Y + end_pos[0] * CELL_SIZE + CELL_SIZE // 2
+
+    # Vẽ đường thắng
+    pygame.draw.line(screen, RED, (start_x, start_y), (end_x, end_y), LINE_WIDTH * 2)
+

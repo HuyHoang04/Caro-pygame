@@ -2,7 +2,7 @@
 import pygame, sys, random, pyperclip
 from button import Button
 from constants import *
-from graphics import draw_grid, draw_symbols, draw_winning_line
+
 from checkwin import check_winner
 from leaderboard import save_score, load_leaderboard
 
