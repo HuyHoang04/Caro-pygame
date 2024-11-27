@@ -6,8 +6,8 @@ from button import Button
 
 # Constants
 SCREEN_SIZE = 1000
-GRID_SIZE = 10 # N
-CELL_SIZE = 595// GRID_SIZE
+GRID_SIZE = 20 # N
+CELL_SIZE = 600 // GRID_SIZE
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
@@ -20,7 +20,7 @@ ICON_O = pygame.image.load("assets/iconO.png")
 ICON_X = pygame.transform.scale(ICON_X, (CELL_SIZE - 4, CELL_SIZE - 4))
 ICON_O = pygame.transform.scale(ICON_O, (CELL_SIZE - 4, CELL_SIZE - 4))
 BG = pygame.image.load("assets/Background3.jpg")
-frame_width = 4
+frame_width = 3
 # Initialize board
 board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
 
@@ -44,19 +44,26 @@ def draw_board(screen, grid_size, cell_size, frame_width):
     screen.blit(BG, (0, 0))  # Đặt nền màn hình thành màu đen
     
     # Tính toán vị trí bắt đầu của bàn cờ để căn giữa
-    start_x = (SCREEN_SIZE - 595) // 2
-    start_y = (SCREEN_SIZE - 595) // 2
-    pygame.draw.rect(screen, (0, 0, 0), (start_x, start_y, 595, 595))
+    start_x = (SCREEN_SIZE - 600) // 2  # Căn giữa bàn cờ (600px là kích thước của bàn cờ)
+    start_y = (SCREEN_SIZE - 600) // 2  # Căn giữa bàn cờ (600px là kích thước của bàn cờ)
+
+    # Vẽ nền bàn cờ (background của bàn cờ)
+    pygame.draw.rect(screen, (0, 0, 0), (start_x, start_y, 600, 600))
+
     # Vẽ các đường kẻ dọc và ngang cho các ô bàn cờ (không thay đổi)
     for x in range(grid_size + 1):  # Cộng thêm 1 để vẽ đường biên ngoài cùng
+        # Vẽ các đường dọc
         pygame.draw.line(screen, WHITE, 
                          (start_x + x * cell_size, start_y), 
-                         (start_x + x * cell_size, start_y + 595), 
+                         (start_x + x * cell_size, start_y + 600), 
                          frame_width)  # Độ dày của các đường kẻ
+        
+        # Vẽ các đường ngang
         pygame.draw.line(screen, WHITE, 
                          (start_x, start_y + x * cell_size), 
-                         (start_x + 595, start_y + x * cell_size), 
+                         (start_x + 600, start_y + x * cell_size), 
                          frame_width)
+
 
 
 
