@@ -5,9 +5,9 @@ import math
 from button import Button
 
 # Constants
-SCREEN_SIZE = 900
+SCREEN_SIZE = 1000
 GRID_SIZE = 10 # N
-CELL_SIZE = 600// GRID_SIZE
+CELL_SIZE = 595// GRID_SIZE
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
@@ -15,11 +15,12 @@ BACKGROUND_COLOR = pygame.image.load("assets/Background3.jpg")
 ICON_X = pygame.image.load("assets/iconX.png")
 ICON_O = pygame.image.load("assets/iconO.png")
 
+
 # Điều chỉnh kích thước các icon sao cho vừa với ô bàn cờ
 ICON_X = pygame.transform.scale(ICON_X, (CELL_SIZE - 4, CELL_SIZE - 4))
 ICON_O = pygame.transform.scale(ICON_O, (CELL_SIZE - 4, CELL_SIZE - 4))
 BG = pygame.image.load("assets/Background3.jpg")
-frame_width = 3
+frame_width = 4
 # Initialize board
 board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
 
@@ -28,8 +29,13 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption("Gomoku: Player vs AI")
 
-
-
+levels = ["Easy", "Medium", "Hard"]
+board_sizes = ["8x8", "10x10", "15x15", "18x18"]
+mode = ["Player vs Player", "Player vs Computer"]
+current_level_index = 1
+current_size_index = 2
+current_mode_index = 0
+player_name = ""
 # Difficulty levels
 EASY, MEDIUM, HARD, VERY_HARD = 1, 2, 3, 4
 AI_DIFFICULTY = EASY  # Change this to EASY, MEDIUM, or HARD
@@ -38,18 +44,18 @@ def draw_board(screen, grid_size, cell_size, frame_width):
     screen.blit(BG, (0, 0))  # Đặt nền màn hình thành màu đen
     
     # Tính toán vị trí bắt đầu của bàn cờ để căn giữa
-    start_x = (SCREEN_SIZE - 600) // 2
-    start_y = (SCREEN_SIZE - 600) // 2
-    pygame.draw.rect(screen, (0, 0, 0), (start_x, start_y, 600, 600))
+    start_x = (SCREEN_SIZE - 595) // 2
+    start_y = (SCREEN_SIZE - 595) // 2
+    pygame.draw.rect(screen, (0, 0, 0), (start_x, start_y, 595, 595))
     # Vẽ các đường kẻ dọc và ngang cho các ô bàn cờ (không thay đổi)
     for x in range(grid_size + 1):  # Cộng thêm 1 để vẽ đường biên ngoài cùng
         pygame.draw.line(screen, WHITE, 
                          (start_x + x * cell_size, start_y), 
-                         (start_x + x * cell_size, start_y + 600), 
+                         (start_x + x * cell_size, start_y + 595), 
                          frame_width)  # Độ dày của các đường kẻ
         pygame.draw.line(screen, WHITE, 
                          (start_x, start_y + x * cell_size), 
-                         (start_x + 600, start_y + x * cell_size), 
+                         (start_x + 595, start_y + x * cell_size), 
                          frame_width)
 
 
@@ -513,14 +519,19 @@ def initialize_game():
 def update_screen(screen, board, grid_size, cell_size):
     draw_board(screen, grid_size, cell_size, frame_width)
     draw_stones(screen, board, grid_size, cell_size)
-    pygame.display.flip()
+
 
 def handle_player_turn(board, player):
+    # Lấy tọa độ chuột khi người chơi click
     x, y = pygame.mouse.get_pos()
 
     # Tính toán lại tọa độ của ô trên bàn cờ (dựa trên vị trí màn hình đã căn giữa)
     x = (x - (SCREEN_SIZE - 600) // 2) // CELL_SIZE
     y = (y - (SCREEN_SIZE - 600) // 2) // CELL_SIZE
+
+    # Kiểm tra xem tọa độ x, y có nằm trong phạm vi hợp lệ của bàn cờ không
+    if x < 0 or x >= GRID_SIZE or y < 0 or y >= GRID_SIZE:
+        return player  # Nếu không hợp lệ, không thay đổi lượt chơi và thoát khỏi hàm
 
     # Kiểm tra nếu ô này còn trống (không có quân cờ nào)
     if board[y][x] == 0:
@@ -538,16 +549,16 @@ def handle_player_turn(board, player):
 
         pygame.display.update()  # Cập nhật màn hình để hiển thị quân cờ mới đánh
 
-        # Sau khi vẽ quân cờ, kiểm tra xem có ai thắng không
+        # Sau khi vẽ quân cờ, kiểm tra xem có ai thắng không và vẽ đường thắng
         if check_winner(board, x, y, player, GRID_SIZE):
             print(f"Player {player} wins!")
             pygame.time.wait(2000)  # Đợi 2 giây trước khi thoát
             sys.exit()
-
-        # Chuyển lượt cho người chơi khác
+                # Chuyển lượt cho người chơi khác
         return 3 - player  # Nếu player == 1 thì trả về 2, nếu player == 2 thì trả về 1
 
     return player  # Nếu ô đã có quân cờ thì không thay đổi lượt
+
 
 
 
@@ -591,17 +602,12 @@ def draw_input_box(SCREEN, x, y, width, height, text, font, base_color, active_c
     return input_box
 
 def main_menu():
-    current_level_index = 1
-    current_size_index = 2
-    current_mode_index = 0
-    player_name = ""
+    global current_level_index, current_size_index,  player_name, current_mode_index
     cursor_visible = True
     input_active = False
     last_cursor_toggle_time = pygame.time.get_ticks()
     cursor_toggle_interval = 500  # Cursor toggle interval in milliseconds
-    levels = ["Easy", "Medium", "Hard"]
-    board_sizes = ["8x8", "10x10", "15x15", "18x18"]
-    mode = ["Player vs Player", "Player vs Computer"]
+
 
     while True:
         screen.blit(BG, (0, 0))
@@ -615,33 +621,33 @@ def main_menu():
         QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE//2, 720), 
                              text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
 
-        LEFT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(240, 300), 
+        LEFT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(330, 300), 
                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
         
-        RIGHT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(660, 300), 
+        RIGHT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(670, 300), 
                                    text_input="", font=get_font(75), base_color="White", hovering_color="Green")
 
         LEVEL_TEXT = get_font(35).render(levels[current_level_index], True, "#d7fcd4")
         LEVEL_RECT = LEVEL_TEXT.get_rect(center=(SCREEN_SIZE//2, 300))
 
-        LEFT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(240, 370), 
+        LEFT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(330, 370), 
                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")  
-        RIGHT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(660, 370), 
+        RIGHT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(670, 370), 
                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
 
         SIZE_TEXT = get_font(35).render(board_sizes[current_size_index], True, "#d7fcd4")
         SIZE_RECT = SIZE_TEXT.get_rect(center=(SCREEN_SIZE//2, 370))
         
-        LEFT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(80, 440), 
+        LEFT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(130, 440), 
                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
-        RIGHT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(800, 440), 
+        RIGHT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(860, 440), 
                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
 
         MODE_TEXT = get_font(35).render(mode[current_mode_index], True, "#d7fcd4")
         MODE_RECT = MODE_TEXT.get_rect(center=(SCREEN_SIZE//2, 440))
 
         # Input box for player name
-        input_box = draw_input_box(screen, 240, 200, 400, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
+        input_box = draw_input_box(screen, 310, 200, 400, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
 
         # Draw elements on the screen
         screen.blit(MENU_TEXT, MENU_RECT)
@@ -699,22 +705,54 @@ def main_menu():
 
         pygame.display.update()
 
+
+
 def play():
     player = initialize_game()
     running = True
+
+    # Tạo các nút BACK và UNDO, đặt vị trí bên dưới bàn cờ
+    PLAY_BACK = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 890), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
+    UNDO_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 890), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
+
     while running:
+        # Lấy vị trí chuột
+        PLAY_MOUSE_POS = pygame.mouse.get_pos()
+
+        # Làm sạch màn hình và vẽ lại bàn cờ
+        screen.fill((0, 0, 0))  # Màu nền (có thể thay đổi thành màu khác nếu cần)
         update_screen(screen, board, GRID_SIZE, CELL_SIZE)
+
+        # Vẽ các nút (Back và Undo) chỉ khi chúng cần thay đổi
+        PLAY_BACK.changeColor(PLAY_MOUSE_POS)  # Cập nhật màu sắc nút Back khi chuột di chuyển qua
+        PLAY_BACK.update(screen)  # Vẽ nút Back lên màn hình
+        
+        UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)  # Cập nhật màu sắc nút Undo khi chuột di chuyển qua
+        UNDO_BUTTON.update(screen)  # Vẽ nút Undo lên màn hình
+
+        # Xử lý sự kiện
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and player == 1:
-                player = handle_player_turn(board, player)
-                if player == 2:
-                    player = handle_ai_turn(board, GRID_SIZE, AI_DIFFICULTY)
+            
+            elif event.type == pygame.MOUSEBUTTONDOWN:  # Kiểm tra nhấn chuột
+                if PLAY_BACK.checkForInput(PLAY_MOUSE_POS):  # Nếu nhấn nút "Back"
+                    main_menu()  # Quay lại menu chính
+                
+                if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS):  # Nếu nhấn nút "Undo"
+                    undo_move()  # Gọi hàm undo_move khi nhấn nút Undo
+                
+                # Xử lý lượt chơi của người chơi (bỏ qua các phần khác nếu chỉ cần xử lý nút)
+                if player == 1:
+                    player = handle_player_turn(board, player)  # Tiến hành lượt chơi của người chơi
+                    if player == 2:
+                        player = handle_ai_turn(board, GRID_SIZE, AI_DIFFICULTY)  # Lượt của AI
 
-  
-    pygame.time.wait(2000)
+        # Chỉ gọi pygame.display.flip() sau khi tất cả đã vẽ xong
+        pygame.display.flip()  # Cập nhật màn hình
+
+
 
 def main():
     """Khởi động game từ menu chính."""
