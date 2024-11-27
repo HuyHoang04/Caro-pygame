@@ -31,3 +31,4 @@ def check_winner(board, symbol):
                 return True, [(row - i, col + i) for i in range(win_length)]
 
     return False, []  # Không tìm thấy người thắng
+
