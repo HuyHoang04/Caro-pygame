@@ -1,6 +1,6 @@
 
 import csv
-from constants import *
+
 
 LEADERBOARD_FILE = "leaderboard.csv"
 

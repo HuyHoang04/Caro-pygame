@@ -205,7 +205,7 @@ def play():
                                 turn += 1  # Chuyển lượt
                                 
                                 # Máy đánh O ngay lập tức sau khi người chơi đánh X
-                                row, col = find_random_empty_spot(board)  # Hàm này sẽ tìm ô trống cho máy
+                                row, col = get_random_empty_cell(board)  # Hàm này sẽ tìm ô trống cho máy
                                 board[row][col] = "O"
                                 history.append((row, col, "O"))
                                 o_wins, winning_positions = check_winner(board, "O")
