@@ -7,7 +7,7 @@ from leaderboard import save_score, load_leaderboard
 
 # Constants
 SCREEN_SIZE = 1000
-GRID_SIZE = 20 # N
+GRID_SIZE = 15 # N
 CELL_SIZE = 600 // GRID_SIZE
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -30,16 +30,23 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption("Gomoku: Player vs AI")
 
-levels = ["Easy", "Medium", "Hard"]
-board_sizes = ["8x8", "10x10", "15x15", "18x18"]
-mode = ["Player vs Player", "Player vs Computer"]
-current_level_index = 1
+
+board_sizes = ["3x3", "5x5", "8x8", "10x10", "15x15", "18x18"]
 current_size_index = 2
+mode = ["Player vs Player", "Player vs Computer"]
+
+
 current_mode_index = 0
 player_name = ""
+history = []  # Danh sách lưu lịch sử các nước đi
 # Difficulty levels
 EASY, MEDIUM, HARD, VERY_HARD = 1, 2, 3, 4
-AI_DIFFICULTY = EASY  # Change this to EASY, MEDIUM, or HARD
+levels = ["Easy", "Medium", "Hard", "Very Hard"]
+current_level_index = 1
+AI_DIFFICULTY = MEDIUM  # Change this to EASY, MEDIUM, or HARD
+
+# Khởi tạo lại bảng board khi thay đổi GRID_SIZE
+
 
 def draw_board(screen, grid_size, cell_size, frame_width):
     screen.blit(BG, (0, 0))  # Đặt nền màn hình thành màu đen
@@ -409,7 +416,6 @@ def check_and_block(board, player, grid_size):
                     # A sequence of 3 with 2 open ends or 4 with at least 1 open end should be blocked
                     if (count == 3 and open_ends == 2) or (count == 4 and open_ends >= 1):
                         board[y][x] = player  # Block the opponent's move
-                        print("blocked", x, y, open_ends)
                         return x, y  # Return the position of the block
 
     return None  
@@ -473,7 +479,6 @@ def very_hard_ai_move(board):
     # First, try to block the opponent's winning move
     block = block_move(board, 1)  # 1 is the opponent's player
     if block:
-        print("Blocking move:", block)
         x, y = block
         board[y][x] = 2  # AI's move
         return x, y
@@ -494,7 +499,6 @@ def very_hard_ai_move(board):
     # If no blocking move, use MCTS to decide the best move
     root = MCTSNode(board)
     best_move = mcts(root, simulations=3000)  # Simulate 100 iterations
-    print("Best move:", best_move)
     x, y = best_move
     board[y][x] = 2  # AI's move
     return x, y
@@ -550,7 +554,9 @@ def display_winner_screen(winner):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if REPLAY_BUTTON.checkForInput(pygame.mouse.get_pos()):
-                    play()  
+                    global board
+                    board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]  # Reset board
+                    play()
                 if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
                    
                     main_menu()  
@@ -619,23 +625,24 @@ def update_screen(screen, board, grid_size, cell_size):
 
 
 def handle_player_turn(board, player):
-    global player_name
+    global player_name, history
     # Lấy tọa độ chuột khi người chơi click
     x, y = pygame.mouse.get_pos()
 
-    # Tính toán lại tọa độ của ô trên bàn cờ (dựa trên vị trí màn hình đã căn giữa)
+    # Tính toán tọa độ ô trên bàn cờ (dựa trên căn giữa màn hình)
     x = (x - (SCREEN_SIZE - 600) // 2) // CELL_SIZE
     y = (y - (SCREEN_SIZE - 600) // 2) // CELL_SIZE
 
-    # Kiểm tra xem tọa độ x, y có nằm trong phạm vi hợp lệ của bàn cờ không
+    # Kiểm tra xem tọa độ x, y có nằm trong phạm vi hợp lệ không
     if x < 0 or x >= GRID_SIZE or y < 0 or y >= GRID_SIZE:
-        return player  # Nếu không hợp lệ, không thay đổi lượt chơi và thoát khỏi hàm
+        return player  # Nếu không hợp lệ, giữ nguyên lượt chơi
 
-    # Kiểm tra nếu ô này còn trống (không có quân cờ nào)
+    # Kiểm tra nếu ô này còn trống
     if board[y][x] == 0:
-        board[y][x] = player  # Đánh quân cờ của người chơi vào ô
+        board[y][x] = player  # Đặt quân cờ của người chơi
+        history.append((x, y))  # Lưu nước đi vào history
 
-        # Vẽ quân cờ sau khi người chơi đánh
+        # Vẽ quân cờ
         if player == 1:
             screen.blit(ICON_X, 
                         (x * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2, 
@@ -645,37 +652,45 @@ def handle_player_turn(board, player):
                         (x * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2, 
                          y * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2))
 
-        pygame.display.update()  # Cập nhật màn hình để hiển thị quân cờ mới đánh
+        pygame.display.update()  # Cập nhật màn hình
 
-        # Sau khi vẽ quân cờ, kiểm tra xem có ai thắng không và vẽ đường thắng
+        # Kiểm tra xem người chơi có thắng không
         if check_winner(board, x, y, player, GRID_SIZE):
             display_winner_screen(player_name)
-            pygame.time.wait(2000)  # Đợi 2 giây trước khi thoát
+            pygame.time.wait(2000)
             sys.exit()
-                # Chuyển lượt cho người chơi khác
-        return 3 - player  # Nếu player == 1 thì trả về 2, nếu player == 2 thì trả về 1
 
-    return player  # Nếu ô đã có quân cờ thì không thay đổi lượt
+        return 3 - player  # Chuyển lượt (1 -> 2, 2 -> 1)
+
+    return player  # Nếu ô đã có quân cờ thì giữ nguyên lượt
+
 
 
 
 def handle_ai_turn(board, grid_size, difficulty):
+    global history
     # AI chọn nước đi
     move = ai_move(board, grid_size, difficulty)
-    
+
     if move:
         x, y = move
-        
-        # Đánh quân cờ của AI vào vị trí được chọn
-        board[y][x] = 2  # Giả sử AI là người chơi 2
+        board[y][x] = 2  # Đặt quân cờ của AI
+        history.append((x, y))  # Lưu nước đi vào history
+
+        # Vẽ quân cờ AI (ICON_O)
+        screen.blit(ICON_O, 
+                    (x * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2, 
+                     y * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2))
+        pygame.display.update()  # Cập nhật màn hình
 
         # Kiểm tra xem AI có thắng không
         if check_winner(board, x, y, 2, grid_size):
-            print("AI wins!")
+            display_winner_screen("AI")
             pygame.time.wait(2000)
             sys.exit()
 
-    return 1  # Quay lại lượt của người chơi 1
+    return 1  # Quay lại lượt người chơi
+
 
 
 
@@ -693,72 +708,75 @@ def draw_input_box(SCREEN, x, y, width, height, text, font, base_color, active_c
         pygame.draw.rect(SCREEN, (0, 0, 0), cursor_rect) 
     return input_box
 
+
+
+
 def main_menu():
-    global current_level_index, current_size_index,  player_name, current_mode_index
+    global current_level_index, current_size_index, player_name, current_mode_index, AI_DIFFICULTY
     cursor_visible = True
     input_active = False
     last_cursor_toggle_time = pygame.time.get_ticks()
-    cursor_toggle_interval = 500  # Cursor toggle interval in milliseconds
-
+    cursor_toggle_interval = 500  # 500 milliseconds for cursor blinking
 
     while True:
         screen.blit(BG, (0, 0))
         MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+        # Main Title
         MENU_TEXT = get_font(50).render("CARO GAME", True, "White")
-        MENU_RECT = MENU_TEXT.get_rect(center=(SCREEN_SIZE//2, 120))
+        MENU_RECT = MENU_TEXT.get_rect(center=(SCREEN_SIZE // 2, 120))
 
-        PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(SCREEN_SIZE//2, 570), 
+        # Buttons
+        PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(SCREEN_SIZE // 2, 570),
                              text_input="PLAY", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
-        
-        SCORE = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(SCREEN_SIZE//2, 720), 
-                             text_input="SCORE", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
-
-        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE//2, 870), 
+        SCORE_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(SCREEN_SIZE // 2, 720),
+                              text_input="SCORE", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
+        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE // 2, 870),
                              text_input="QUIT", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
 
-        LEFT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(330, 300), 
+        # Level Arrows and Text
+        LEFT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(300, 300),
                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
-        
-        RIGHT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(670, 300), 
+        RIGHT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(700, 300),
                                    text_input="", font=get_font(75), base_color="White", hovering_color="Green")
-
         LEVEL_TEXT = get_font(35).render(levels[current_level_index], True, "#d7fcd4")
-        LEVEL_RECT = LEVEL_TEXT.get_rect(center=(SCREEN_SIZE//2, 300))
+        LEVEL_RECT = LEVEL_TEXT.get_rect(center=(SCREEN_SIZE // 2, 300))
 
-        LEFT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(330, 370), 
-                                 text_input="", font=get_font(75), base_color="White", hovering_color="Green")  
-        RIGHT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(670, 370), 
-                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
-
-        SIZE_TEXT = get_font(35).render(board_sizes[current_size_index], True, "#d7fcd4")
-        SIZE_RECT = SIZE_TEXT.get_rect(center=(SCREEN_SIZE//2, 370))
-        
-        LEFT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(130, 440), 
+        # Board Size Arrows and Text
+        LEFT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(330, 370),
                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
-        RIGHT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(860, 440), 
+        RIGHT_ARROW_SIZE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(670, 370),
                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+        SIZE_TEXT = get_font(35).render(board_sizes[current_size_index], True, "#d7fcd4")
+        SIZE_RECT = SIZE_TEXT.get_rect(center=(SCREEN_SIZE // 2, 370))
 
+        # Game Mode Arrows and Text
+        LEFT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(130, 440),
+                                 text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+        RIGHT_ARROW_MODE = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(860, 440),
+                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
         MODE_TEXT = get_font(35).render(mode[current_mode_index], True, "#d7fcd4")
-        MODE_RECT = MODE_TEXT.get_rect(center=(SCREEN_SIZE//2, 440))
+        MODE_RECT = MODE_TEXT.get_rect(center=(SCREEN_SIZE // 2, 440))
 
-        # Input box for player name
+        # Input Box for Player Name
         input_box = draw_input_box(screen, 310, 200, 400, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
 
-        # Draw elements on the screen
+        # Display everything
         screen.blit(MENU_TEXT, MENU_RECT)
         screen.blit(LEVEL_TEXT, LEVEL_RECT)
         screen.blit(SIZE_TEXT, SIZE_RECT)
         screen.blit(MODE_TEXT, MODE_RECT)
 
-        for button in [PLAY_BUTTON, SCORE, QUIT_BUTTON, LEFT_ARROW_LEVEL, RIGHT_ARROW_LEVEL, LEFT_ARROW_SIZE, RIGHT_ARROW_SIZE, LEFT_ARROW_MODE, RIGHT_ARROW_MODE]:
+        for button in [PLAY_BUTTON, SCORE_BUTTON, QUIT_BUTTON, LEFT_ARROW_LEVEL, RIGHT_ARROW_LEVEL,
+                       LEFT_ARROW_SIZE, RIGHT_ARROW_SIZE, LEFT_ARROW_MODE, RIGHT_ARROW_MODE]:
             button.changeColor(MENU_MOUSE_POS)
             button.update(screen)
 
-        # Cursor visibility toggle
+        # Cursor blinking
         current_time = pygame.time.get_ticks()
         if current_time - last_cursor_toggle_time > cursor_toggle_interval:
-            cursor_visible = not cursor_visible 
-            last_cursor_toggle_time = current_time  
+            cursor_visible = not cursor_visible
+            last_cursor_toggle_time = current_time
 
         # Handle events
         for event in pygame.event.get():
@@ -767,9 +785,9 @@ def main_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    play()
-                if SCORE.checkForInput(MENU_MOUSE_POS):
-                    display_leaderboard()  
+                    play()  # Start game
+                if SCORE_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    display_leaderboard()  # Display scores
                 if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
                     pygame.quit()
                     sys.exit()
@@ -779,38 +797,56 @@ def main_menu():
                     current_level_index = (current_level_index + 1) % len(levels)
                 if LEFT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index - 1) % len(board_sizes)
-                  
+                   
                 if RIGHT_ARROW_SIZE.checkForInput(MENU_MOUSE_POS):
                     current_size_index = (current_size_index + 1) % len(board_sizes)
-                 
+           
                 if LEFT_ARROW_MODE.checkForInput(MENU_MOUSE_POS):
                     current_mode_index = (current_mode_index - 1) % len(mode)
                 if RIGHT_ARROW_MODE.checkForInput(MENU_MOUSE_POS):
                     current_mode_index = (current_mode_index + 1) % len(mode)
 
-            # Keyboard input for player name
+            # Handle player name input
             if event.type == pygame.KEYDOWN:
                 if input_active:
                     if event.key == pygame.K_BACKSPACE:
-                        player_name = player_name[:-1]  # Remove last character
-                    else:
-                        player_name += event.unicode  # Add character to name
+                        player_name = player_name[:-1]
+                    elif len(player_name) < 10:  # Limit to 10 characters
+                        player_name += event.unicode
                 if input_box.collidepoint(MENU_MOUSE_POS):
                     input_active = True
                 else:
                     input_active = False
 
+        # Update AI_DIFFICULTY
+        AI_DIFFICULTY = [EASY, MEDIUM, HARD, VERY_HARD][current_level_index]
+
         pygame.display.update()
 
 
-    
+
+def undo():
+    global history, board
+    if len(history) >= 2:
+        last_move_ai = history.pop()  # Bỏ nước đi của AI
+        last_move_player = history.pop()  # Bỏ nước đi của người chơi
+
+        # Xóa quân cờ trên bàn cờ
+        board[last_move_ai[1]][last_move_ai[0]] = 0  # Xóa quân cờ AI
+        board[last_move_player[1]][last_move_player[0]] = 0  # Xóa quân cờ người chơi
+
+        # Vẽ lại màn hình để xóa quân cờ
+        update_screen(screen, board, GRID_SIZE, CELL_SIZE)
+        pygame.display.update()  # Cập nhật lại màn hình
+
 
 def play():
-    global player_name
+    global player_name, board
     player = initialize_game()
 
     # Tạo các nút BACK và UNDO, đặt vị trí bên dưới bàn cờ
-    PLAY_BACK = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 890), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
+    PLAY_BACK = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 110), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
+    REPLAY = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 890), text_input="REPLAY", font=get_font(45), base_color="White", hovering_color="Red")
     UNDO_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 890), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
 
     while True:
@@ -827,6 +863,9 @@ def play():
         
         UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)  # Cập nhật màu sắc nút Undo khi chuột di chuyển qua
         UNDO_BUTTON.update(screen)  # Vẽ nút Undo lên màn hình
+        
+        REPLAY.changeColor(PLAY_MOUSE_POS)
+        REPLAY.update(screen)
 
         # Xử lý sự kiện
         for event in pygame.event.get():
@@ -838,8 +877,12 @@ def play():
                 if PLAY_BACK.checkForInput(PLAY_MOUSE_POS):  # Nếu nhấn nút "Back"
                     main_menu()  # Quay lại menu chính
                 
-                if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS):  # Nếu nhấn nút "Undo"
-                    undo_move()  # Gọi hàm undo_move khi nhấn nút Undo
+                if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and len(history) >= 2:
+                    undo()
+
+                if REPLAY.checkForInput(PLAY_MOUSE_POS):
+                    board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]  # Reset lạ bàn cờ
+                    player = 1  # Reset lại lượt chơi về người chơi 1
                 
                 # Xử lý lượt chơi của người chơi (bỏ qua các phần khác nếu chỉ cần xử lý nút)
                 if player == 1:
@@ -850,8 +893,7 @@ def play():
         # Chỉ gọi pygame.display.flip() sau khi tất cả đã vẽ xong
         pygame.display.update()  # Cập nhật màn hình
 
-def undo_move():
-    """Gọi hàm undo_move để quay lại lượt chơi trước đó."""
+
 
 def main():
     """Khởi động game từ menu chính."""
