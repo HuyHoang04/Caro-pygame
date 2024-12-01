@@ -3,6 +3,7 @@ import sys
 import random
 import math
 from button import Button
+from leaderboard import save_score, load_leaderboard
 
 # Constants
 SCREEN_SIZE = 1000
@@ -520,6 +521,95 @@ def player_move(board, x, y, player):
         return True
     return False
 
+def display_winner_screen(winner):
+    global player_name  
+    if winner == 1:
+        save_score(player_name, "Lose")
+    else:
+        save_score(player_name, "Win")
+
+    while True:
+        screen.blit(BG, (0, 0))  
+        WINNER_TEXT = get_font(75).render(f"{winner} Wins!", True, "White")
+        WINNER_RECT = WINNER_TEXT.get_rect(center=(SCREEN_SIZE//2, 300))
+        REPLAY_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 500),
+                               text_input="Replay", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 500),
+                             text_input="BACK", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        SCORE_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE//2, 660),
+                              text_input="Score", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        screen.blit(WINNER_TEXT, WINNER_RECT)
+
+        for button in [REPLAY_BUTTON, BACK_BUTTON, SCORE_BUTTON]:
+            button.changeColor(pygame.mouse.get_pos())
+            button.update(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if REPLAY_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                    play()  
+                if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                   
+                    main_menu()  
+                if SCORE_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                   
+                    display_leaderboard() 
+        pygame.display.update()
+
+def display_leaderboard():
+    leaderboard = load_leaderboard()
+    current_page = 0
+    items_per_page = 10  # Giới hạn 10 mục trên mỗi trang
+
+    while True:
+        screen.blit(BG, (0, 0))  
+        TITLE_TEXT = get_font(65).render("LEADERBOARD", True, "White")
+        TITLE_RECT = TITLE_TEXT.get_rect(center=(SCREEN_SIZE//2, 100))
+        screen.blit(TITLE_TEXT, TITLE_RECT)
+        start_index = current_page * items_per_page
+        end_index = start_index + items_per_page
+        for index, entry in enumerate(leaderboard[start_index:end_index], start=start_index + 1):
+            name_text = get_font(35).render(f"{index}. {entry[0]} - {entry[1]}", True, "White")
+            name_rect = name_text.get_rect(center=(SCREEN_SIZE//2, 150 + (index - start_index) * 50))
+            screen.blit(name_text, name_rect)
+
+        PREV_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(300, 880),
+                             text_input="Pre", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        PREV_BUTTON.changeColor(pygame.mouse.get_pos())
+        PREV_BUTTON.update(screen)
+
+        NEXT_BUTTON =  Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(710, 880),
+                             text_input="Next", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        NEXT_BUTTON.changeColor(pygame.mouse.get_pos())
+        NEXT_BUTTON.update(screen)
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE//2, 750),
+                             text_input="BACK", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+        BACK_BUTTON.changeColor(pygame.mouse.get_pos())
+        BACK_BUTTON.update(screen)
+
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+               
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if PREV_BUTTON.checkForInput(pygame.mouse.get_pos()) and current_page > 0:
+                    
+                    current_page -= 1 
+                if NEXT_BUTTON.checkForInput(pygame.mouse.get_pos()) and (current_page + 1) * items_per_page < len(leaderboard):
+                   
+                    current_page += 1  
+                if BACK_BUTTON.checkForInput(pygame.mouse.get_pos()):
+                   
+                    return  
+
+        pygame.display.update()
+
 def initialize_game():
     return 1
 
@@ -529,6 +619,7 @@ def update_screen(screen, board, grid_size, cell_size):
 
 
 def handle_player_turn(board, player):
+    global player_name
     # Lấy tọa độ chuột khi người chơi click
     x, y = pygame.mouse.get_pos()
 
@@ -558,19 +649,13 @@ def handle_player_turn(board, player):
 
         # Sau khi vẽ quân cờ, kiểm tra xem có ai thắng không và vẽ đường thắng
         if check_winner(board, x, y, player, GRID_SIZE):
-            print(f"Player {player} wins!")
+            display_winner_screen(player_name)
             pygame.time.wait(2000)  # Đợi 2 giây trước khi thoát
             sys.exit()
                 # Chuyển lượt cho người chơi khác
         return 3 - player  # Nếu player == 1 thì trả về 2, nếu player == 2 thì trả về 1
 
     return player  # Nếu ô đã có quân cờ thì không thay đổi lượt
-
-
-
-
-
-
 
 
 
@@ -623,10 +708,13 @@ def main_menu():
         MENU_RECT = MENU_TEXT.get_rect(center=(SCREEN_SIZE//2, 120))
 
         PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(SCREEN_SIZE//2, 570), 
-                             text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+                             text_input="PLAY", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
+        
+        SCORE = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(SCREEN_SIZE//2, 720), 
+                             text_input="SCORE", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
 
-        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE//2, 720), 
-                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE//2, 870), 
+                             text_input="QUIT", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
 
         LEFT_ARROW_LEVEL = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(330, 300), 
                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
@@ -662,7 +750,7 @@ def main_menu():
         screen.blit(SIZE_TEXT, SIZE_RECT)
         screen.blit(MODE_TEXT, MODE_RECT)
 
-        for button in [PLAY_BUTTON, QUIT_BUTTON, LEFT_ARROW_LEVEL, RIGHT_ARROW_LEVEL, LEFT_ARROW_SIZE, RIGHT_ARROW_SIZE, LEFT_ARROW_MODE, RIGHT_ARROW_MODE]:
+        for button in [PLAY_BUTTON, SCORE, QUIT_BUTTON, LEFT_ARROW_LEVEL, RIGHT_ARROW_LEVEL, LEFT_ARROW_SIZE, RIGHT_ARROW_SIZE, LEFT_ARROW_MODE, RIGHT_ARROW_MODE]:
             button.changeColor(MENU_MOUSE_POS)
             button.update(screen)
 
@@ -680,6 +768,8 @@ def main_menu():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
                     play()
+                if SCORE.checkForInput(MENU_MOUSE_POS):
+                    display_leaderboard()  
                 if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
                     pygame.quit()
                     sys.exit()
@@ -713,21 +803,22 @@ def main_menu():
         pygame.display.update()
 
 
+    
 
 def play():
+    global player_name
     player = initialize_game()
-    running = True
 
     # Tạo các nút BACK và UNDO, đặt vị trí bên dưới bàn cờ
     PLAY_BACK = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 890), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
     UNDO_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 890), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
 
-    while running:
+    while True:
         # Lấy vị trí chuột
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
 
         # Làm sạch màn hình và vẽ lại bàn cờ
-        screen.fill((0, 0, 0))  # Màu nền (có thể thay đổi thành màu khác nếu cần)
+        screen.fill((0, 2, 0))  # Màu nền (có thể thay đổi thành màu khác nếu cần)
         update_screen(screen, board, GRID_SIZE, CELL_SIZE)
 
         # Vẽ các nút (Back và Undo) chỉ khi chúng cần thay đổi
@@ -757,9 +848,10 @@ def play():
                         player = handle_ai_turn(board, GRID_SIZE, AI_DIFFICULTY)  # Lượt của AI
 
         # Chỉ gọi pygame.display.flip() sau khi tất cả đã vẽ xong
-        pygame.display.flip()  # Cập nhật màn hình
+        pygame.display.update()  # Cập nhật màn hình
 
-
+def undo_move():
+    """Gọi hàm undo_move để quay lại lượt chơi trước đó."""
 
 def main():
     """Khởi động game từ menu chính."""
