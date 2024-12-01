@@ -36,7 +36,7 @@ current_size_index = 2
 mode = ["Player vs Player", "Player vs Computer"]
 
 
-current_mode_index = 0
+current_mode_index = 1
 player_name = ""
 history = []  # Danh sách lưu lịch sử các nước đi
 # Difficulty levels
@@ -548,9 +548,9 @@ def display_winner_screen(winner):
         screen.blit(BG, (0, 0))  
         WINNER_TEXT = get_font(75).render(f"{winner} Wins!", True, "White")
         WINNER_RECT = WINNER_TEXT.get_rect(center=(SCREEN_SIZE//2, 300))
-        REPLAY_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 500),
+        REPLAY_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(300, 500),
                                text_input="Replay", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
-        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 500),
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(750, 500),
                              text_input="BACK", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
         SCORE_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE//2, 660),
                               text_input="Score", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
