@@ -4,6 +4,8 @@ import random
 import math
 from button import Button
 from leaderboard import save_score, load_leaderboard
+from moviepy.editor import VideoFileClip
+
 
 # Constants
 SCREEN_SIZE = 1000
@@ -30,9 +32,14 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption("Gomoku: Player vs AI")
 
+#Intro 
+
+
+
+# Sound
 sound = pygame.mixer.Sound("assets/soundBG.mp3")
 sound.set_volume(0.5)
-sound.play()
+# sound.play()
 
 board_sizes = ["5x5", "8x8", "10x10", "15x15", "20x20"]
 current_size_index = 2
@@ -85,8 +92,6 @@ def draw_board(screen, grid_size, cell_size, frame_width):
 
 
 
-
-
 def draw_stones(screen, board, grid_size, cell_size):
     # Tính toán vị trí bắt đầu của bàn cờ để căn giữa
     start_x = (SCREEN_SIZE - 600) // 2
@@ -104,8 +109,6 @@ def draw_stones(screen, board, grid_size, cell_size):
                     ICON_O,
                     (start_x + x * cell_size + 2, start_y + y * cell_size + 2)  
                 )
-
-
 
 
 def check_winner(board, x, y, player, grid_size):
@@ -172,7 +175,6 @@ def medium_ai_move(board, grid_size):
 
 def evaluate_board(board):
     score = 0
-
     # Patterns to check:  
     patterns = {
         "open_four": 10000,   # Four in a row with both ends open
@@ -425,7 +427,8 @@ def check_and_block(board, player, grid_size):
                     # Block when there are 3 or 4 consecutive opponent stones with open ends
                     # A sequence of 3 with 2 open ends or 4 with at least 1 open end should be blocked
                     if (count == 3 and open_ends == 2) or (count == 4 and open_ends >= 1):
-                        board[y][x] = player  # Block the opponent's move
+                
+                        print("blocked", x, y, open_ends)
                         return x, y  # Return the position of the block
 
     return None  
@@ -489,26 +492,29 @@ def very_hard_ai_move(board):
     # First, try to block the opponent's winning move
     block = block_move(board, 1)  # 1 is the opponent's player
     if block:
+        print("Blocking move:", block)
         x, y = block
-        board[y][x] = 2  # AI's move
+        
         return x, y
     
     win_move = check_and_win(board, 2)
     if win_move:
-        board[win_move[1]][win_move[0]] = 2  # AI đi vào vị trí thắng
+          # AI đi vào vị trí thắng
         x,y = win_move[1],win_move[0]
         return x, y
 
         # Check and block before any further exploration if the opponent has a sequence to block
     bblock_move = check_and_block(board, 2, grid_size=GRID_SIZE)  # Check if the opponent (player 1) has a winning move
     if bblock_move:
-        board[bblock_move[1]][bblock_move[0]] = 2  # AI places its piece to block the opponent
+          # AI places its piece to block the opponent
         x,y = bblock_move[1],bblock_move[0]
+    
         return x, y
 
     # If no blocking move, use MCTS to decide the best move
     root = MCTSNode(board)
-    best_move = mcts(root, simulations=3000)  # Simulate 100 iterations
+    best_move = mcts(root, simulations=3000)
+    print("Best move:", best_move)# Simulate 100 iterations
     x, y = best_move
     board[y][x] = 2  # AI's move
     return x, y
@@ -746,7 +752,7 @@ def handle_ai_turn(board, grid_size, difficulty):
 
 def handle_ai_ai_turn(board, grid_size):
     global history, ai_1, ai_2 
-    move_1 = easy_ai_move(board, grid_size)  
+    move_1 = medium_ai_move(board, grid_size)  
     if move_1:
         x, y = move_1
         board[y][x] = 1  
@@ -760,7 +766,7 @@ def handle_ai_ai_turn(board, grid_size):
             pygame.time.wait(2000)
             sys.exit()  
 
-    move_2 = hard_ai_move(board, grid_size)  
+    move_2 = easy_ai_move(board, grid_size)  
     if move_2:
         x, y = move_2
         board[y][x] = 2 
@@ -840,7 +846,7 @@ def main_menu():
         MODE_TEXT = get_font(35).render(mode[current_mode_index], True, "#d7fcd4")
         MODE_RECT = MODE_TEXT.get_rect(center=(SCREEN_SIZE // 2, 440))
 
-        input_box = draw_input_box(screen, 310, 200, 400, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
+        input_box = draw_input_box(screen, 250, 200, 500, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
 
         screen.blit(MENU_TEXT, MENU_RECT)
         screen.blit(LEVEL_TEXT, LEVEL_RECT)
