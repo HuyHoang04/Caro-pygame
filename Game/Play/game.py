@@ -44,7 +44,7 @@ player_name = ""
 player_1 = "X"
 player_2 = "O"
 ai_1 = "Computer X"
-a2_2 = "Computer O"
+ai_2 = "Computer O"
 
 history = []  # Danh sách lưu lịch sử các nước đi
 # Difficulty levels
@@ -546,9 +546,8 @@ def player_move(board, x, y, player):
     return False
 
 def display_winner_screen(winner):
-    global player_name, player_1, player_2, current_mode_index, ai
-    
-    # Xử lý theo chế độ (Player vs Player hay Player vs AI)
+    global player_name, player_1, player_2, current_mode_index, ai_1, ai_2
+
     if current_mode_index == 1:  # Chế độ Player vs AI
         if winner == 2:
             save_score(player_name, "Lose")
@@ -556,14 +555,19 @@ def display_winner_screen(winner):
         else:
             save_score(player_name, "Win")
             winner_text = f"{player_name} Wins!"
-    else:  # Chế độ Player vs Player
+    elif current_mode_index == 0:  # Chế độ Player vs Player
         if winner == player_1:
             winner_text = f"{player_1} Wins!"
         elif winner == player_2:
             winner_text = f"{player_2} Wins!"
-    
+    elif current_mode_index == 2:  # Chế độ AI vs AI
+        if winner == ai_1:
+            winner_text = "AI 1 Wins!"
+        elif winner == ai_2:
+            winner_text = "AI 2 Wins!"
+
     while True:
-        screen.blit(BG, (0, 0))  
+        screen.blit(BG, (0, 0))  # Vẽ lại background
 
         # Hiển thị văn bản người thắng
         WINNER_TEXT = get_font(75).render(winner_text, True, "White")
@@ -766,6 +770,7 @@ def handle_ai_turn(board, grid_size, difficulty):
 
 def handle_ai_ai_turn(board, grid_size):
     global history, ai_1, ai_2 
+
     # AI 1 (X) thực hiện lượt đi đầu tiên
     move_1 = easy_ai_move(board, grid_size)  # AI 1 sử dụng easy_ai_move (đánh X)
     if move_1:
@@ -779,9 +784,9 @@ def handle_ai_ai_turn(board, grid_size):
 
         # Kiểm tra xem AI 1 có thắng không
         if check_winner(board, x, y, 1, grid_size):
-            display_winner_screen("AI 1 (X)")
+            display_winner_screen(ai_1)  # Gọi màn hình thắng cho AI 1
             pygame.time.wait(2000)
-            sys.exit()
+            sys.exit()  # Dừng trò chơi
 
     # AI 2 (O) thực hiện lượt đi tiếp theo
     move_2 = hard_ai_move(board, grid_size)  # AI 2 sử dụng hard_ai_move (đánh O)
@@ -796,11 +801,13 @@ def handle_ai_ai_turn(board, grid_size):
 
         # Kiểm tra xem AI 2 có thắng không
         if check_winner(board, x, y, 2, grid_size):
-            display_winner_screen("AI 2 (O)")
+            display_winner_screen(ai_2)  # Gọi màn hình thắng cho AI 2
             pygame.time.wait(2000)
-            sys.exit()
+            sys.exit()  # Dừng trò chơi
 
     return 1  # Trở lại lượt chơi (hoặc AI tiếp theo)
+
+
 
 
 
@@ -954,8 +961,8 @@ def undo():
 
 
 def play():
-    global player_name, board, GRID_SIZE, current_player, game_over
-    player = initialize_game()
+    global player_name, board, GRID_SIZE, current_player, game_over, history
+    player = initialize_game()  # Khởi tạo lại trò chơi (nếu cần)
     board_size = int(board_sizes[current_size_index].split('x')[0])
     GRID_SIZE = board_size
     set_board_size(board_size)
@@ -965,20 +972,25 @@ def play():
     REPLAY = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 890), text_input="REPLAY", font=get_font(45), base_color="White", hovering_color="Red")
     UNDO_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 890), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
 
+    # Reset trạng thái ban đầu
+    history = []  # Reset lại lịch sử các nước đi
+    current_player = 1  # Người chơi 1 bắt đầu
+    game_over = False  # Trạng thái trò chơi chưa kết thúc
+    board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]  # Khởi tạo lại bàn cờ
+
     while True:
-        # Lấy vị trí chuột
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
 
         # Làm sạch màn hình và vẽ lại bàn cờ
         screen.fill((0, 2, 0))  # Màu nền (có thể thay đổi thành màu khác nếu cần)
         update_screen(screen, board, GRID_SIZE, CELL_SIZE)
 
-        # Vẽ các nút (Back và Undo) chỉ khi chúng cần thay đổi
-        PLAY_BACK.changeColor(PLAY_MOUSE_POS)  # Cập nhật màu sắc nút Back khi chuột di chuyển qua
-        PLAY_BACK.update(screen)  # Vẽ nút Back lên màn hình
+        # Vẽ các nút (Back, Undo, Replay)
+        PLAY_BACK.changeColor(PLAY_MOUSE_POS)
+        PLAY_BACK.update(screen)
         
-        UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)  # Cập nhật màu sắc nút Undo khi chuột di chuyển qua
-        UNDO_BUTTON.update(screen)  # Vẽ nút Undo lên màn hình
+        UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)
+        UNDO_BUTTON.update(screen)
         
         REPLAY.changeColor(PLAY_MOUSE_POS)
         REPLAY.update(screen)
@@ -994,31 +1006,39 @@ def play():
                     main_menu()  # Quay lại menu chính
                 
                 if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and len(history) >= 2:
-                    undo()
+                    undo()  # Undo nếu có lịch sử ít nhất 2 nước đi
 
                 if REPLAY.checkForInput(PLAY_MOUSE_POS):
+                    # Reset lại trò chơi
                     board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]  # Reset lại bàn cờ
+                    history = []  # Reset lịch sử nước đi
                     current_player = 1  # Reset lại lượt chơi về người chơi 1
                     game_over = False  # Reset trạng thái game
-                    
-                if current_mode_index == 0:  # Player vs Player
-                    if current_player == 1:
-                        current_player = handle_player_turn(board, current_player)
-                    elif current_player == 2:
-                        current_player = handle_player_turn(board, current_player)
 
+                    # Khởi động lại trò chơi (AI vs AI)
+                    play()  # Gọi lại hàm play để khởi tạo lại trò chơi
 
-                if current_mode_index == 1:  # Player vs AI
-                    if current_player == 1:
-                        current_player = handle_player_turn(board, current_player)  # Tiến hành lượt chơi của người chơi
-                    if current_player == 2:
-                        current_player = handle_ai_turn(board, GRID_SIZE, AI_DIFFICULTY)  # Lượt của AI
-                        
-                if current_mode_index == 2:  # AI vs AI
-                    handle_ai_ai_turn(board, GRID_SIZE)
+                # Xử lý các chế độ chơi
+                if not game_over:  # Nếu chưa kết thúc trò chơi
+                    if current_mode_index == 0:  # Player vs Player
+                        if current_player == 1:
+                            current_player = handle_player_turn(board, current_player)  # Người chơi 1 đánh
+                        elif current_player == 2:
+                            current_player = handle_player_turn(board, current_player)  # Người chơi 2 đánh
 
-        # Chỉ gọi pygame.display.flip() sau khi tất cả đã vẽ xong
+                    elif current_mode_index == 1:  # Player vs AI
+                        if current_player == 1:
+                            current_player = handle_player_turn(board, current_player)  # Người chơi 1 đánh
+                        if current_player == 2:
+                            current_player = handle_ai_turn(board, GRID_SIZE, AI_DIFFICULTY)  # AI đánh
+
+                    elif current_mode_index == 2:  # AI vs AI
+                        if not game_over:
+                            handle_ai_ai_turn(board, GRID_SIZE)  # Xử lý lượt đi của AI 1 và AI 2
+
         pygame.display.update()  # Cập nhật màn hình
+
+
 
 
 
