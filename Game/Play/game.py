@@ -6,7 +6,6 @@ from button import Button
 from leaderboard import save_score, load_leaderboard
 from moviepy.editor import VideoFileClip
 
-
 # Constants
 SCREEN_SIZE = 1000
 GRID_SIZE = 15 # N
@@ -32,14 +31,10 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption("Gomoku: Player vs AI")
 
-#Intro 
-
-
-
 # Sound
 sound = pygame.mixer.Sound("assets/soundBG.mp3")
 sound.set_volume(0.5)
-# sound.play()
+sound.play()
 
 board_sizes = ["5x5", "8x8", "10x10", "15x15", "20x20"]
 current_size_index = 2
@@ -60,6 +55,28 @@ levels = ["Easy", "Medium", "Hard", "Very Hard"]
 current_level_index = 1
 AI_DIFFICULTY = MEDIUM  # Change this to EASY, MEDIUM, or HARD
 
+
+def intro(video_path="path/to/your/video.mp4"):
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
+    pygame.display.set_caption("Intro Video")
+
+    # Tải video bằng MoviePy
+    clip = VideoFileClip(video_path)
+    clip = clip.resize(height=SCREEN_SIZE, width=SCREEN_SIZE)
+
+    # Lặp qua từng frame video và vẽ lên màn hình Pygame
+    for frame in clip.iter_frames(fps=30, with_times=False):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        
+        frame_surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+        screen.blit(frame_surface, (0, 0))
+        pygame.display.update()
+    
+    clip.close()
 
 def set_board_size(size):
     global GRID_SIZE, CELL_SIZE, board, ICON_X, ICON_O
@@ -798,7 +815,7 @@ def draw_input_box(SCREEN, x, y, width, height, text, font, base_color, active_c
         pygame.draw.rect(SCREEN, (0, 0, 0), cursor_rect) 
     return input_box
 
-
+                
 def main_menu():
     global current_level_index, current_size_index, player_name, current_mode_index, AI_DIFFICULTY
     cursor_visible = True
@@ -996,7 +1013,8 @@ def play():
 
 def main():
     """Khởi động game từ menu chính."""
-    main_menu()  
+    intro("./assets/intro.mp4")
+    main_menu()
    
 
 if __name__ == "__main__":
