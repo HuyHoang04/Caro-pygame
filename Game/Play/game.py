@@ -37,7 +37,7 @@ pygame.display.set_caption("Gomoku: Player vs AI")
 # Sound
 sound = pygame.mixer.Sound("assets/soundBG.mp3")
 sound.set_volume(0.5)
-sound.play()
+# sound.play()
 
 board_sizes = ["5x5", "8x8", "10x10", "15x15", "20x20"]
 current_size_index = 2
@@ -890,7 +890,7 @@ def main_menu():
         MODE_TEXT = get_font(35).render(mode[current_mode_index], True, "#d7fcd4")
         MODE_RECT = MODE_TEXT.get_rect(center=(SCREEN_SIZE // 2, 440))
 
-        input_box = draw_input_box(screen, 250, 200, 500, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
+        input_box = draw_input_box(screen, 250, 180, 500, 50, player_name, get_font(35), "#d7fcd4", "White", cursor_visible)
 
         screen.blit(MENU_TEXT, MENU_RECT)
         screen.blit(LEVEL_TEXT, LEVEL_RECT)
@@ -1154,7 +1154,7 @@ def play():
 
 def main():
     """Khởi động game từ menu chính."""
-    intro("./assets/intro.mp4")
+    # intro("./assets/intro.mp4")
     main_menu()
    
 
