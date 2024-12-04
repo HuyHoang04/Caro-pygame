@@ -13,6 +13,9 @@ CELL_SIZE = 600 // GRID_SIZE
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
+BLUE_LIGHT = (100, 149, 237) 
+YELLOW_LIGHT = (255, 221, 51)  
+RED = (180, 0, 0)
 BACKGROUND_COLOR = pygame.image.load("assets/Background3.jpg")
 ICON_X = pygame.image.load("assets/iconX.png")
 ICON_O = pygame.image.load("assets/iconO.png")
@@ -39,8 +42,6 @@ sound.play()
 board_sizes = ["5x5", "8x8", "10x10", "15x15", "20x20"]
 current_size_index = 2
 mode = ["Player vs Player", "Player vs Computer", "Computer vs Computer"]
-
-
 current_mode_index = 1
 player_name = ""
 player_1 = "X"
@@ -53,6 +54,11 @@ history = []  # Danh sách lưu lịch sử các nước đi
 EASY, MEDIUM, HARD, VERY_HARD = 1, 2, 3, 4
 levels = ["Easy", "Medium", "Hard", "Very Hard"]
 current_level_index = 1
+
+level_ai1 = ["Easy", "Medium", "Hard", "Very Hard"]
+current_level_ai1 = 1
+level_ai2 = ["Easy", "Medium", "Hard", "Very Hard"]
+current_level_ai2 = 1
 AI_DIFFICULTY = MEDIUM  # Change this to EASY, MEDIUM, or HARD
 
 
@@ -768,12 +774,22 @@ def handle_ai_turn(board, grid_size, difficulty):
 
 
 def handle_ai_ai_turn(board, grid_size):
-    global history, ai_1, ai_2 
-    move_1 = medium_ai_move(board, grid_size)  
+    global history, ai_1, ai_2
+    
+    # Ánh xạ cấp độ AI sang các hàm AI tương ứng cho AI 1
+    if level_ai1[current_level_ai1] == "Easy":
+        move_1 = easy_ai_move(board, grid_size)
+    elif level_ai1[current_level_ai1] == "Medium":
+        move_1 = medium_ai_move(board, grid_size)
+    elif level_ai1[current_level_ai1] == "Hard":
+        move_1 = hard_ai_move(board, grid_size)
+    elif level_ai1[current_level_ai1] == "Very Hard":
+        move_1 = very_hard_ai_move(board, grid_size)
+
     if move_1:
         x, y = move_1
-        board[y][x] = 1  
-        history.append((x, y)) 
+        board[y][x] = 1
+        history.append(((x, y)))  # Lưu nước đi của AI 1
 
         screen.blit(ICON_X, (x * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2, y * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2))
         pygame.display.update()  
@@ -783,11 +799,20 @@ def handle_ai_ai_turn(board, grid_size):
             pygame.time.wait(2000)
             sys.exit()  
 
-    move_2 = easy_ai_move(board, grid_size)  
+    # Cập nhật cho AI 2
+    if level_ai2[current_level_ai2] == "Easy":
+        move_2 = easy_ai_move(board, grid_size)
+    elif level_ai2[current_level_ai2] == "Medium":
+        move_2 = medium_ai_move(board, grid_size)
+    elif level_ai2[current_level_ai2] == "Hard":
+        move_2 = hard_ai_move(board, grid_size)
+    elif level_ai2[current_level_ai2] == "Very Hard":
+        move_2 = very_hard_ai_move(board, grid_size)
+
     if move_2:
         x, y = move_2
-        board[y][x] = 2 
-        history.append((x, y))  
+        board[y][x] = 2
+        history.append(((x, y)))  # Lưu nước đi của AI 2
 
         screen.blit(ICON_O, (x * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2, y * CELL_SIZE + (SCREEN_SIZE - 600) // 2 + 2))
         pygame.display.update()  
@@ -797,7 +822,9 @@ def handle_ai_ai_turn(board, grid_size):
             pygame.time.wait(2000)
             sys.exit()  
 
-    return 1 
+    return 1
+
+
 
 
 
@@ -886,7 +913,10 @@ def main_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    play() 
+                    if current_mode_index == 2:  # "Computer vs Computer"
+                        choose_level_ai()  # Go to AI level selection screen
+                    else:
+                        play()  # Start the game directly for other modes
                 if SCORE_BUTTON.checkForInput(MENU_MOUSE_POS):
                     display_leaderboard()  
                 if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
@@ -925,31 +955,137 @@ def main_menu():
         pygame.display.update()
 
 
+def choose_level_ai():
+    global current_level_ai1, current_level_ai2, AI_DIFFICULTY
+    cursor_visible = True
+    last_cursor_toggle_time = pygame.time.get_ticks()
+    cursor_toggle_interval = 500  
+    while True:
+        screen.blit(BG, (0, 0))
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
 
-def undo():
-    global history, board
-    if len(history) >= 2:
-        last_move_ai = history.pop()  
-        last_move_player = history.pop()  
+        # Main Title
+        MENU_TEXT = get_font(30).render("Please Choose AI Level", True, YELLOW_LIGHT)
+        MENU_RECT = MENU_TEXT.get_rect(center=(SCREEN_SIZE // 2, 120))
+
+        # Buttons
+        DONE_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(SCREEN_SIZE // 2, 610),
+                             text_input="DONE", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(SCREEN_SIZE // 2, 790),
+                             text_input="BACK", font=get_font(65), base_color="#d7fcd4", hovering_color="White")
+
+       
+        AI1_TEXT = get_font(30).render("AI X", True, BLUE_LIGHT)
+        AI1_RECT = AI1_TEXT.get_rect(center=(SCREEN_SIZE // 2, 240))
         
-        board[last_move_ai[1]][last_move_ai[0]] = 0  
-        board[last_move_player[1]][last_move_player[0]] = 0  
+        LEFT_ARROW_LEVEL_AI1 = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(300, 300),
+                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+        RIGHT_ARROW_LEVEL_AI1 = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(700, 300),
+                                   text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+        LEVEL_AI1_TEXT = get_font(35).render(level_ai1[current_level_ai1], True, "#d7fcd4")
+        LEVEL_AI1_RECT = LEVEL_AI1_TEXT.get_rect(center=(SCREEN_SIZE // 2, 300))
+        
+        AI2_TEXT = get_font(30).render("AI O", True, RED)
+        AI2_RECT = AI2_TEXT.get_rect(center=(SCREEN_SIZE // 2, 380))
+        
+        LEFT_ARROW_LEVEL_AI2 = Button(image=pygame.image.load("assets/arrow-left2.png"), pos=(300, 440),
+                                 text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+        RIGHT_ARROW_LEVEL_AI2 = Button(image=pygame.image.load("assets/arrow-right2.png"), pos=(700, 440),
+                                  text_input="", font=get_font(75), base_color="White", hovering_color="Green")
+        LEVEL_AI2_TEXT = get_font(35).render(level_ai2[current_level_ai2], True, "#d7fcd4")
+        LEVEL_AI2_RECT = LEVEL_AI2_TEXT.get_rect(center=(SCREEN_SIZE // 2, 440))
 
-        update_screen(screen, board, GRID_SIZE, CELL_SIZE)
-        pygame.display.update()  
+
+        screen.blit(MENU_TEXT, MENU_RECT)
+        screen.blit(AI1_TEXT, AI1_RECT)
+        screen.blit(AI2_TEXT, AI2_RECT)
+        screen.blit(LEVEL_AI1_TEXT, LEVEL_AI1_RECT)
+        screen.blit(LEVEL_AI2_TEXT, LEVEL_AI2_RECT)
+
+        for button in [DONE_BUTTON, BACK_BUTTON, LEFT_ARROW_LEVEL_AI1, RIGHT_ARROW_LEVEL_AI1,
+                        LEFT_ARROW_LEVEL_AI2, RIGHT_ARROW_LEVEL_AI2]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)
+
+        current_time = pygame.time.get_ticks()
+        if current_time - last_cursor_toggle_time > cursor_toggle_interval:
+            cursor_visible = not cursor_visible
+            last_cursor_toggle_time = current_time
+            
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if DONE_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    play()  # Start the game after selecting AI level
+                if BACK_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    main_menu()
+                if LEFT_ARROW_LEVEL_AI1.checkForInput(MENU_MOUSE_POS):
+                    current_level_ai1 = (current_level_ai1 - 1) % len(level_ai1)
+                if RIGHT_ARROW_LEVEL_AI1.checkForInput(MENU_MOUSE_POS):
+                    current_level_ai1 = (current_level_ai1 + 1) % len(level_ai1)
+                if LEFT_ARROW_LEVEL_AI2.checkForInput(MENU_MOUSE_POS):
+                    current_level_ai2 = (current_level_ai2 - 1) % len(level_ai2)
+                if RIGHT_ARROW_LEVEL_AI2.checkForInput(MENU_MOUSE_POS):
+                    current_level_ai2 = (current_level_ai2 + 1) % len(level_ai2)
+            
+            
+
+        # Update AI_DIFFICULTY
+        AI_DIFFICULTY = [EASY, MEDIUM, HARD, VERY_HARD][current_level_index]
+
+        pygame.display.update()
+def undo():
+    global history, board, current_mode_index
+
+    if current_mode_index == 2:
+        if len(history) >= 2:  
+
+            last_move_ai_2 = history.pop() 
+            last_move_ai_1 = history.pop() 
+            board[last_move_ai_1[1]][last_move_ai_1[0]] = 0  
+            board[last_move_ai_2[1]][last_move_ai_2[0]] = 0 
+            update_screen(screen, board, GRID_SIZE, CELL_SIZE)
+            pygame.display.update()
+
+    else:
+      
+        if len(history) >= 2:  
+            last_move_player = history.pop()  
+            last_move_ai = history.pop() 
+            board[last_move_player[1]][last_move_player[0]] = 0 
+            board[last_move_ai[1]][last_move_ai[0]] = 0  
+            update_screen(screen, board, GRID_SIZE, CELL_SIZE)
+            pygame.display.update()
+
 
 
 
 def play():
-    global player_name, board, GRID_SIZE, current_player, game_over, history
+    global player_name, board, GRID_SIZE, current_player, game_over, history, current_mode_index
+
     player = initialize_game()  
     board_size = int(board_sizes[current_size_index].split('x')[0])
     GRID_SIZE = board_size
     set_board_size(board_size)
 
-    PLAY_BACK = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 110), text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
-    REPLAY = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 890), text_input="REPLAY", font=get_font(45), base_color="White", hovering_color="Red")
-    UNDO_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 890), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
+    # Các nút trong game
+    if current_mode_index == 2:
+        REPLAY = Button(image=pygame.image.load("assets/Quit Rect.png"), 
+                           pos=(SCREEN_SIZE//2, 890),  # Căn giữa nút BACK
+                           text_input="REPLAY", font=get_font(45), base_color="White", hovering_color="Red")
+    else:
+        REPLAY = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(240, 890), text_input="REPLAY", font=get_font(45), base_color="White", hovering_color="Red")
+    
+    PLAY_BACK = Button(image=pygame.image.load("assets/Quit Rect.png"), 
+                           pos=(240, 110),  # Vị trí mặc định của nút BACK
+                           text_input="BACK", font=get_font(45), base_color="White", hovering_color="Red")
+
+    if current_mode_index != 2:  
+        UNDO_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(780, 890), text_input="UNDO", font=get_font(45), base_color="White", hovering_color="Red")
+    else:
+        UNDO_BUTTON = None  
 
     history = []  
     current_player = 1  
@@ -958,19 +1094,19 @@ def play():
 
     while True:
         PLAY_MOUSE_POS = pygame.mouse.get_pos()
- 
-        screen.fill((0, 2, 0))  
+
+        screen.fill((0, 2, 0)) 
         update_screen(screen, board, GRID_SIZE, CELL_SIZE)
 
         PLAY_BACK.changeColor(PLAY_MOUSE_POS)
         PLAY_BACK.update(screen)
 
-        UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)
-        UNDO_BUTTON.update(screen)
-        
         REPLAY.changeColor(PLAY_MOUSE_POS)
         REPLAY.update(screen)
 
+        if UNDO_BUTTON:
+            UNDO_BUTTON.changeColor(PLAY_MOUSE_POS)
+            UNDO_BUTTON.update(screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -979,17 +1115,20 @@ def play():
 
             elif event.type == pygame.MOUSEBUTTONDOWN: 
                 if PLAY_BACK.checkForInput(PLAY_MOUSE_POS):  
-                    main_menu()  
-                
-                if UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and len(history) >= 2:
+                    if current_mode_index == 2: 
+                        choose_level_ai() 
+                    else:
+                        main_menu()  
+
+                if UNDO_BUTTON and UNDO_BUTTON.checkForInput(PLAY_MOUSE_POS) and len(history) >= 2:
                     undo()  
 
                 if REPLAY.checkForInput(PLAY_MOUSE_POS):
-                    board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]  # Reset lại bàn cờ
+                    board = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]  
                     history = [] 
                     current_player = 1  
                     game_over = False  
-                    play()  
+                    play() 
 
                 if not game_over:  
                     if current_mode_index == 0:  
@@ -1004,11 +1143,13 @@ def play():
                         if current_player == 2:
                             current_player = handle_ai_turn(board, GRID_SIZE, AI_DIFFICULTY)  
 
-                    elif current_mode_index == 2:  
+                    elif current_mode_index == 2: 
                         if not game_over:
                             handle_ai_ai_turn(board, GRID_SIZE)  
 
-        pygame.display.update()  
+        pygame.display.update() 
+
+
 
 
 def main():
